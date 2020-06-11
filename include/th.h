@@ -5,7 +5,10 @@
 #include <SimpleDHT.h>
 
 namespace th {
-    struct data;
+    struct data {
+        byte temp;
+        byte humid;
+    };
 
     data getInside();
     data getOutside();
