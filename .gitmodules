@@ -1,0 +1,3 @@
+[submodule "lib/RTCLib"]
+	path = lib/RTCLib
+	url = git@github.com:45gfg9/RTCLib
