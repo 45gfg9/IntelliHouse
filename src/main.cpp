@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include "th.h"
-#include "remote.h"
-#include "task.h"
+// #include "climate.h"
+// #include "remote.h"
+// #include "task.h"
 
 void setup() {
   // put your setup code here, to run once:
