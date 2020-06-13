@@ -2,4 +2,7 @@
 
 using namespace task;
 
-DS3231 rtc;
+DS1302 rtc;
+
+DateTime& task::getTime() {
+}
