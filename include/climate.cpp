@@ -27,22 +27,6 @@ dht_data climate::getOutside() {
     return get(dht_out);
 }
 
-class climate::Season {
-    const byte INTERVAL = 3;
-};
-
-class climate::Spring : public Season {
-    const byte MONTH = 2;
-};
-
-class climate::Summer : public Season {
-    const byte MONTH = 5;
-};
-
-class climate::Autumn : public Season {
-    const byte MONTH = 8;
-};
-
-class climate::Winter : public Season {
-    const byte MONTH = 11;
+season climate::fromMonth(int month) {
+    return season((month + 10) % 12 / 3);
 }

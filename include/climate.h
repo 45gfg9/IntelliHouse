@@ -13,11 +13,11 @@ namespace climate {
     dht_data getInside();
     dht_data getOutside();
 
-    class Season;
-    class Spring;
-    class Summer;
-    class Autumn;
-    class Winter;
+    enum season {
+        SPRING, SUMMER, AUTUMN, WINTER
+    };
+
+    season fromMonth(uint8_t month);
 }
 
 #endif // __FFF_TH_H__
