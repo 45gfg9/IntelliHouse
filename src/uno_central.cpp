@@ -1,11 +1,15 @@
 #include <Arduino.h>
-#include "climate.h"
-#include "task.h"
+#include <SoftwareSerial.h>
+#include "climate.hxx"
+#include "task.hxx"
+
+SoftwareSerial ss(2, 3);
 
 void setup() {
-  // put your setup code here, to run once:
+  ss.begin(115200);
+
+  // task::getTime();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 }

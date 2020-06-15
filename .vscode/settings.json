@@ -2,4 +2,7 @@
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
+    "files.associations": {
+        "functional": "cpp"
+    },
 }
