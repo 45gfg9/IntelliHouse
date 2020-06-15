@@ -5,11 +5,21 @@
 
 SoftwareSerial ss(2, 3);
 
-void setup() {
+void setup()
+{
   ss.begin(115200);
 
   // task::getTime();
 }
 
-void loop() {
+void loop()
+{
+  // handleSerial(ss);
+}
+
+void handleSerial(Stream &serial)
+{
+  while (serial.available())
+  {
+  }
 }

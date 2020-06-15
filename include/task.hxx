@@ -4,18 +4,21 @@
 #include <Arduino.h>
 #include <RTClib.h>
 
-namespace task {
+namespace task
+{
     void begin();
     DateTime getTime();
-}
+} // namespace task
 
 static DS1302 rtc;
 
-void task::begin() {
+void task::begin()
+{
     rtc.begin();
 }
 
-DateTime task::getTime() {
+DateTime task::getTime()
+{
     return rtc.now();
 }
 

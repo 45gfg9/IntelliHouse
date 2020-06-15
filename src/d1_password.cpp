@@ -2,8 +2,10 @@
 #include <Hash.h>
 #include "remote.hxx"
 
-void setup() {
+void setup()
+{
 }
 
-void loop() {
+void loop()
+{
 }
