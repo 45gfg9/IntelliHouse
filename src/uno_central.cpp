@@ -1,13 +1,11 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
-#include "climate.hxx"
+#include <Wire.h>
+// #include "climate.hxx"
 #include "task.hxx"
-
-SoftwareSerial ss(2, 3);
 
 void setup()
 {
-  ss.begin(115200);
+  Wire.begin(2);
 
   // task::getTime();
 }

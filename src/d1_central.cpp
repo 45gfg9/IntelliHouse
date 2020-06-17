@@ -1,13 +1,12 @@
 #include <Arduino.h>
+#include <EEPROM.h>
+#include <Wire.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <SoftwareSerial.h>
-#include <EEPROM.h>
 #include "remote.hxx"
 
 #define PSK_STRLEN 18
 
-SoftwareSerial ss(2, 3);
 ESP8266WebServer server(80);
 
 void handleSerial(Stream &serial);
@@ -16,7 +15,7 @@ char psk[PSK_STRLEN] = {};
 void setup()
 {
   delay(1000);
-  ss.begin(115200);
+  // Wire.beginTransmission(2);
   Serial.begin(115200);
 
   EEPROM.begin(PSK_STRLEN);
@@ -72,7 +71,6 @@ void setup()
     data[i] = 0;
 
     Serial.println(data);
-    ss.println(data);
     server.send(200, "text/plain", data);
   });
   server.begin();

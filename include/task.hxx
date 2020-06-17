@@ -10,16 +10,4 @@ namespace task
     DateTime getTime();
 } // namespace task
 
-static DS1302 rtc;
-
-void task::begin()
-{
-    rtc.begin();
-}
-
-DateTime task::getTime()
-{
-    return rtc.now();
-}
-
 #endif // __FFF_TASK_H__
