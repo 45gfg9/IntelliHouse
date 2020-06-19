@@ -5,9 +5,9 @@
 #include "task.hxx"
 
 char keymap[4][4] = {
-    {'7', '8', '9', 'A'},
+    {'1', '2', '3', 'A'},
     {'4', '5', '6', 'B'},
-    {'1', '2', '3', 'C'},
+    {'7', '8', '9', 'C'},
     {'*', '0', '#', 'D'},
 };
 
@@ -16,7 +16,10 @@ byte colPins[4] = {9, 8, 7, 6};
 
 Keypad keypad(makeKeymap(keymap), rowPins, colPins, 4, 4);
 
-void getRandPass(char out[5]);
+String getRandPass(uint32_t n);
+void checkInput();
+bool verifyPass(const String &str);
+void handleResult(bool success);
 
 void setup()
 {
@@ -25,20 +28,66 @@ void setup()
 
 void loop()
 {
+    checkInput();
 }
 
-void getRandPass(char out[6])
+String getPass(uint32_t n)
 {
     static const char map[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                '8', '9', 'A', 'B', 'C', 'D'};
 
-    uint32_t time = task::getTime().unixtime();
-    char tchr[10];
+    char out[6];
     uint8_t hash[20];
-    snprintf(tchr, 10, "%u", time);
-    sha1(tchr, strlen(tchr), hash);
+    sha1(String(n), hash);
 
     for (int i = 0; i < 5; i++)
         out[i] = map[hash[hash[i] % 3 + i * 3 + 5] % 14];
     out[5] = 0;
+
+    return String(out);
+}
+
+void checkInput()
+{
+    static String str;
+    char c = keypad.getKey();
+    if (!c)
+        return;
+    // KeyState ks = keypad.getState();
+    switch (c)
+    {
+
+    case '#':
+        if (str.length()) verifyPass(str);
+
+    case '*':
+        str.clear();
+        break;
+
+    default:
+        str += c;
+        break;
+    }
+}
+
+bool verifyPass(const String &str)
+{
+    if (str.length() != 5)
+        return false;
+
+    uint32_t this_min = task::getTime().unixtime() / 60,
+             prev_min = this_min - 1,
+             prev_prev_min = prev_min - 1;
+
+    return (str == getPass(this_min) ||
+            str == getPass(prev_min) ||
+            str == getPass(prev_prev_min));
+}
+
+void handleResult(bool success) {
+    if (success) {
+
+    } else {
+
+    }
 }
