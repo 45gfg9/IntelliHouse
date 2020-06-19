@@ -15,7 +15,6 @@ char psk[PSK_STRLEN] = {};
 void setup()
 {
   delay(1000);
-  // Wire.beginTransmission(2);
   Serial.begin(115200);
 
   EEPROM.begin(PSK_STRLEN);
@@ -73,6 +72,24 @@ void setup()
     Serial.println(data);
     server.send(200, "text/plain", data);
   });
+
+  server.on("/time", []() {
+    Wire.beginTransmission(2);
+    Wire.write('T');
+    Wire.endTransmission();
+
+    Wire.requestFrom(2, 4);
+    uint32_t time = 0;
+    time |= Wire.read();
+    time |= Wire.read() << 8;
+    time |= Wire.read() << 16;
+    time |= Wire.read() << 24;
+
+    char content[10];
+    snprintf(content, 10, "%ul", time);
+    server.send(200, "text/plain", content);
+  });
+
   server.begin();
 }
 
