@@ -15,10 +15,19 @@ IPAddress remote::begin()
     return WiFi.softAPIP();
 }
 
-wl_status_t remote::connect()
+void remote::connect()
 {
     WiFi.mode(WIFI_STA);
     WiFi.begin(AP_ssid, AP_pass);
 
-    return WiFi.status();
+    for (;;)
+    {
+        wl_status_t status = WiFi.status();
+        if (status == WL_CONNECTED || status == WL_IDLE_STATUS)
+            break;
+    }
+}
+
+DateTime remote::getTime() {
+    return (uint32_t) 0;
 }

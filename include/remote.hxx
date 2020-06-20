@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <RTClib.h>
+#include "climate.hxx"
 
 namespace remote
 {
@@ -12,7 +14,10 @@ namespace remote
     extern const char *AP_pass;
 
     IPAddress begin();
-    wl_status_t connect();
+    void connect();
+
+    DateTime getTime();
+    climate::dht_data getTH();
 } // namespace remote
 
 #endif // __FFF_REMOTE_H__

@@ -36,15 +36,15 @@ String getPass(uint32_t n)
     static const char map[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                '8', '9', 'A', 'B', 'C', 'D'};
 
-    char out[6];
+    char otp[6];
     uint8_t hash[20];
     sha1(String(n), hash);
 
     for (int i = 0; i < 5; i++)
-        out[i] = map[hash[hash[i] % 3 + i * 3 + 5] % 14];
-    out[5] = 0;
+        otp[i] = map[hash[hash[i] % 3 + i * 3 + 5] % 14];
+    otp[5] = 0;
 
-    return String(out);
+    return String(otp);
 }
 
 void checkInput()
@@ -55,10 +55,11 @@ void checkInput()
         return;
     switch (c)
     {
-
     case '#':
-        if (str.length()) handleResult(verifyPass(str));
-        else break;
+        if (str.length())
+            handleResult(verifyPass(str));
+        else
+            break;
     case '*':
         str.clear();
         break;
@@ -74,7 +75,7 @@ bool verifyPass(const String &str)
     if (str.length() != 5)
         return false;
 
-    uint32_t this_min = task::getTime().unixtime() / 60,
+    uint32_t this_min = remote::getTime().unixtime() / 60,
              prev_min = this_min - 1,
              prev_prev_min = prev_min - 1;
 
@@ -83,10 +84,12 @@ bool verifyPass(const String &str)
             str == getPass(prev_prev_min));
 }
 
-void handleResult(bool success) {
-    if (success) {
-
-    } else {
-
+void handleResult(bool success)
+{
+    if (success)
+    {
+    }
+    else
+    {
     }
 }
