@@ -8,6 +8,7 @@ namespace task
 {
     void begin();
     DateTime getTime();
+    void calibrate();
 } // namespace task
 
 #endif // __FFF_TASK_H__

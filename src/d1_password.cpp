@@ -53,13 +53,12 @@ void checkInput()
     char c = keypad.getKey();
     if (!c)
         return;
-    // KeyState ks = keypad.getState();
     switch (c)
     {
 
     case '#':
-        if (str.length()) verifyPass(str);
-
+        if (str.length()) handleResult(verifyPass(str));
+        else break;
     case '*':
         str.clear();
         break;

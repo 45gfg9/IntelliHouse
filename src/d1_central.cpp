@@ -54,20 +54,13 @@ void setup()
     }
     delay(500);
 
-    const int available = client.available();
-    char data[available];
-    int i = 0;
-    bool read = false;
+    String data('{');
     while (client.available())
     {
-      char tmp;
-      if ((tmp = client.read()) == '{' || read)
-      {
-        read = true;
-        data[i++] = tmp;
-      }
+      if (client.read() == '{')
+      data += client.readStringUntil('}');
     }
-    data[i] = 0;
+    data += '}';
 
     Serial.println(data);
     server.send(200, "text/plain", data);
@@ -85,9 +78,7 @@ void setup()
     time |= Wire.read() << 16;
     time |= Wire.read() << 24;
 
-    char content[10];
-    snprintf(content, 10, "%ul", time);
-    server.send(200, "text/plain", content);
+    server.send(200, "text/plain", String(time));
   });
 
   server.begin();
@@ -96,13 +87,4 @@ void setup()
 void loop()
 {
   server.handleClient(); // non-blocking
-
-  // handleSerial(ss);
-}
-
-void handleSerial(Stream &serial)
-{
-  while (serial.available())
-  {
-  }
 }
