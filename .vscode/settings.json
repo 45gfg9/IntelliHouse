@@ -3,6 +3,24 @@
     "files.trimFinalNewlines": true,
     "files.insertFinalNewline": true,
     "files.associations": {
-        "functional": "cpp"
+        "functional": "cpp",
+        "array": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "ostream": "cpp",
+        "numeric": "cpp",
+        "streambuf": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "initializer_list": "cpp"
     },
 }

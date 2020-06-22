@@ -1,23 +1,29 @@
-#ifndef __FFF_REMOTE_H__
-#define __FFF_REMOTE_H__
+#ifndef __SH_REMOTE_H__
+#define __SH_REMOTE_H__
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <RTClib.h>
-#include "climate.hxx"
+#include <Wire.h>
+#include "common.hxx"
 
 namespace remote
 {
-    extern const char *EX_ssid;
-    extern const char *EX_pass;
+    extern char *EX_ssid;
+    extern char *EX_pass;
     extern const char *AP_ssid;
     extern const char *AP_pass;
 
-    IPAddress begin();
+    extern IPAddress AP_ip;
+
+    void begin();
     void connect();
 
-    DateTime getTime();
-    climate::dht_data getTH();
+    uint32_t getTime();
+    common::dht_data getTH();
+    String header(IPAddress host, String uri);
+    String header(String host, String uri);
+    String header(IPAddress host, String uri, String query);
+    String header(String host, String uri, String query);
 } // namespace remote
 
-#endif // __FFF_REMOTE_H__
+#endif // __SH_REMOTE_H__

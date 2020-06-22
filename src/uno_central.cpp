@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
-// #include "climate.hxx"
-#include "task.hxx"
+#include <RTClib.h>
+#include <SimpleDHT.h>
+#include "common.hxx"
 
 enum action
 {
@@ -10,11 +11,19 @@ enum action
   NONE
 } act;
 
+static const int RTC_CLK = 8;
+static const int RTC_DAT = 9;
+static const int RTC_RST = 10;
+static const int DHT_PIN = 5;
+
+DS1302 rtc(RTC_RST, RTC_CLK, RTC_DAT);
+SimpleDHT11 dht(DHT_PIN);
+
 void setup()
 {
-  Wire.begin(2);
+  Wire.begin(IIC);
 
-  task::begin();
+  rtc.begin();
 
   Wire.onReceive([](int n) {
     switch (Wire.read())
@@ -32,7 +41,7 @@ void setup()
     switch (act)
     {
     case TIME:
-      uint32_t time = task::getTime().unixtime();
+      uint32_t time = rtc.now().unixtime();
 
       Wire.write(time);
       Wire.write(time >> 8);
@@ -41,20 +50,21 @@ void setup()
       break;
 
     case DHT11:
+      byte t, h;
+
+      if (dht.read(&t, &h, nullptr) == SimpleDHTErrSuccess)
+        t = h = 127;
+
+      Wire.write(t);
+      Wire.write(h);
+
       break;
     }
+
     act = NONE;
   });
 }
 
 void loop()
 {
-  // handleSerial(ss);
-}
-
-void handleSerial(Stream &serial)
-{
-  while (serial.available())
-  {
-  }
 }

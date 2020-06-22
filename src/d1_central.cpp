@@ -9,8 +9,37 @@
 
 ESP8266WebServer server(80);
 
-void handleSerial(Stream &serial);
 char psk[PSK_STRLEN] = {};
+
+uint32_t getTime()
+{
+  Wire.beginTransmission(IIC);
+  Wire.write('T');
+  Wire.endTransmission();
+
+  Wire.requestFrom(IIC, 4);
+  uint32_t time = 0;
+  time |= (byte)Wire.read();
+  time |= (byte)Wire.read() << 8;
+  time |= (byte)Wire.read() << 16;
+  time |= (byte)Wire.read() << 24;
+
+  Serial.println(time);
+
+  return time;
+}
+
+common::dht_data getTH() {
+  Wire.beginTransmission(IIC);
+  Wire.write('D');
+  Wire.endTransmission();
+
+  Wire.requestFrom(IIC, 2);
+  byte temp = Wire.read();
+  byte humid = Wire.read();
+
+  return {temp, humid};
+}
 
 void setup()
 {
@@ -24,8 +53,8 @@ void setup()
   Serial.println();
   Serial.println(psk);
 
-  IPAddress ip = remote::begin();
-  Serial.println(ip);
+  remote::begin();
+  Serial.println(remote::AP_ip);
 
   server.on("/weather", []() {
     const char *host = ("api.seniverse.com");
@@ -58,7 +87,7 @@ void setup()
     while (client.available())
     {
       if (client.read() == '{')
-      data += client.readStringUntil('}');
+        data += client.readStringUntil('}');
     }
     data += '}';
 
@@ -67,18 +96,18 @@ void setup()
   });
 
   server.on("/time", []() {
-    Wire.beginTransmission(2);
-    Wire.write('T');
-    Wire.endTransmission();
-
-    Wire.requestFrom(2, 4);
-    uint32_t time = 0;
-    time |= Wire.read();
-    time |= Wire.read() << 8;
-    time |= Wire.read() << 16;
-    time |= Wire.read() << 24;
+    uint32_t time = getTime();
 
     server.send(200, "text/plain", String(time));
+  });
+
+  server.on("/th", []() {
+    common::dht_data data = getTH();
+
+    String t(data.temp);
+    String h(data.humid);
+
+    server.send(200, "text/plain", t + ' ' + h);
   });
 
   server.begin();

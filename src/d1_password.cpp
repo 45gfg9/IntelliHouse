@@ -2,7 +2,6 @@
 #include <Hash.h>
 #include "remote.hxx"
 #include <Keypad.h>
-#include "task.hxx"
 
 char keymap[4][4] = {
     {'1', '2', '3', 'A'},
@@ -75,7 +74,7 @@ bool verifyPass(const String &str)
     if (str.length() != 5)
         return false;
 
-    uint32_t this_min = remote::getTime().unixtime() / 60,
+    uint32_t this_min = remote::getTime() / 60,
              prev_min = this_min - 1,
              prev_prev_min = prev_min - 1;
 
