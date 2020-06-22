@@ -24,8 +24,6 @@ uint32_t getTime()
   time |= (byte)Wire.read() << 16;
   time |= (byte)Wire.read() << 24;
 
-  Serial.println(time);
-
   return time;
 }
 
@@ -43,8 +41,9 @@ common::dht_data getTH() {
 
 void setup()
 {
-  delay(1000);
+  // delay(1000);
   Serial.begin(115200);
+  Wire.begin();
 
   EEPROM.begin(PSK_STRLEN);
   for (int i = 0; i < PSK_STRLEN; i++)
@@ -57,57 +56,17 @@ void setup()
   Serial.println(remote::AP_ip);
 
   server.on("/weather", []() {
-    const char *host = ("api.seniverse.com");
-    const char *uri = ("/v3/weather/now.json");
-    const char *partialQuery = ("?location=WQ7SF3WEPQRU&key=");
-
-    WiFiClient client;
-    if (!client.connect(host, 80))
-    {
-      server.send(500, "text/plain", "connection failed");
-      client.stop();
-      return;
-    }
-
-    client.printf_P(PSTR("GET %s%s%s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n"), uri, partialQuery, psk, host);
-
-    unsigned long timeout = millis();
-    while (client.available() == 0)
-    {
-      if (millis() - timeout > 5000)
-      {
-        server.send(504, "text/plain", "Connection timed out");
-        client.stop();
-        return;
-      }
-    }
-    delay(500);
-
-    String data('{');
-    while (client.available())
-    {
-      if (client.read() == '{')
-        data += client.readStringUntil('}');
-    }
-    data += '}';
-
-    Serial.println(data);
-    server.send(200, "text/plain", data);
+    server.send(200, "text/plain", remote::getWeatherJsonStr(psk));
   });
 
   server.on("/time", []() {
-    uint32_t time = getTime();
-
-    server.send(200, "text/plain", String(time));
+    server.send(200, "text/plain", String(getTime()));
   });
 
   server.on("/th", []() {
     common::dht_data data = getTH();
 
-    String t(data.temp);
-    String h(data.humid);
-
-    server.send(200, "text/plain", t + ' ' + h);
+    server.send(200, "text/plain", String(data.temp) + ' ' + data.humid);
   });
 
   server.begin();

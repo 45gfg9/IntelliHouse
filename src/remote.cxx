@@ -30,25 +30,29 @@ static void connectBlocking(const char *ssid, const char *pass)
     }
 }
 
-static bool connectAP(WiFiClient &client)
+static bool connect(WiFiClient &client, String host, int port)
 {
-    if (!client.connect(remote::AP_ip, 80))
+    if (!client.connect(host, port))
     {
         return false;
     }
-
     while (!client.connected())
         ;
     return true;
 }
 
-static String readResponse(WiFiClient &client)
+static bool connectAP(WiFiClient &client)
+{
+    return connect(client, remote::AP_ip.toString(), 80);
+}
+
+static String readResponse(WiFiClient &client, int loadTime = 500)
 {
     unsigned long timeout = millis();
     while (client.available() == 0)
         if (millis() - timeout > 5000)
             return "";
-    delay(500);
+    delay(loadTime);
 
     return client.readString();
 }
@@ -104,6 +108,18 @@ common::dht_data remote::getTH()
     String h = content.substring(sep + 1);
 
     return {(byte)t.toInt(), (byte)h.toInt()};
+}
+
+String remote::getWeatherJsonStr(String psk)
+{
+    static const String host(F("api.seniverse.com"));
+    static const String uri(F("/v3/weather/now.json"));
+    static const String partialQuery(F("?location=WQ7SF3WEPQRU&key="));
+
+    WiFiClient client;
+    connect(client, host, 80);
+    client.println(header(host, uri, partialQuery + psk));
+    return parseContent(readResponse(client));
 }
 
 String remote::header(IPAddress host, String uri)

@@ -20,6 +20,8 @@ namespace remote
 
     uint32_t getTime();
     common::dht_data getTH();
+    String getWeatherJsonStr(String psk);
+
     String header(IPAddress host, String uri);
     String header(String host, String uri);
     String header(IPAddress host, String uri, String query);

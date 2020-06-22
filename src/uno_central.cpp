@@ -7,8 +7,8 @@
 enum action
 {
   TIME,
-  DHT11,
-  NONE
+  DHT,
+  NONE = -1
 } act;
 
 static const int RTC_CLK = 8;
@@ -21,27 +21,25 @@ SimpleDHT11 dht(DHT_PIN);
 
 void setup()
 {
+  Serial.begin(115200);
   Wire.begin(IIC);
 
   rtc.begin();
 
   Wire.onReceive([](int n) {
-    switch (Wire.read())
-    {
-    case 'T':
-      act = TIME;
-      break;
-    case 'D':
-      act = DHT11;
-      break;
-    }
+    act = action(Wire.read());
+
+    Serial.println(act);
   });
 
   Wire.onRequest([]() {
+    uint32_t time;
+    byte t, h;
+
     switch (act)
     {
     case TIME:
-      uint32_t time = rtc.now().unixtime();
+      time = rtc.now().unixtime();
 
       Wire.write(time);
       Wire.write(time >> 8);
@@ -49,15 +47,14 @@ void setup()
       Wire.write(time >> 24);
       break;
 
-    case DHT11:
-      byte t, h;
-
+    case DHT:
       if (dht.read(&t, &h, nullptr) == SimpleDHTErrSuccess)
         t = h = 127;
-
       Wire.write(t);
       Wire.write(h);
+      break;
 
+    case NONE:
       break;
     }
 
@@ -67,4 +64,6 @@ void setup()
 
 void loop()
 {
+  // Serial.println("?");
+  // delay(2000);
 }
