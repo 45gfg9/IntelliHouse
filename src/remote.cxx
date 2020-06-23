@@ -96,20 +96,6 @@ uint32_t remote::getTime()
     return content.toInt();
 }
 
-common::dht_data remote::getTH()
-{
-    WiFiClient client;
-    connectAP(client);
-    client.println(header(AP_ip, "/th"));
-    String content = parseContent(readResponse(client));
-
-    int sep = content.indexOf(' ');
-    String t = content.substring(0, sep);
-    String h = content.substring(sep + 1);
-
-    return {(byte)t.toInt(), (byte)h.toInt()};
-}
-
 String remote::getWeatherJsonStr(String psk)
 {
     static const String host(F("api.seniverse.com"));

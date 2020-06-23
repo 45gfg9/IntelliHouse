@@ -4,20 +4,11 @@
 #include <SimpleDHT.h>
 #include "common.hxx"
 
-enum action
-{
-  TIME,
-  DHT,
-  NONE = -1
-} act;
-
 static const int RTC_CLK = 8;
 static const int RTC_DAT = 9;
 static const int RTC_RST = 10;
-static const int DHT_PIN = 5;
 
 DS1302 rtc(RTC_RST, RTC_CLK, RTC_DAT);
-SimpleDHT11 dht(DHT_PIN);
 
 void setup()
 {
@@ -26,39 +17,13 @@ void setup()
 
   rtc.begin();
 
-  Wire.onReceive([](int n) {
-    act = action(Wire.read());
-
-    Serial.println(act);
-  });
-
   Wire.onRequest([]() {
-    uint32_t time;
-    byte t, h;
+    uint32_t time = rtc.now().unixtime();
 
-    switch (act)
-    {
-    case TIME:
-      time = rtc.now().unixtime();
-
-      Wire.write(time);
-      Wire.write(time >> 8);
-      Wire.write(time >> 16);
-      Wire.write(time >> 24);
-      break;
-
-    case DHT:
-      if (dht.read(&t, &h, nullptr) == SimpleDHTErrSuccess)
-        t = h = 127;
-      Wire.write(t);
-      Wire.write(h);
-      break;
-
-    case NONE:
-      break;
-    }
-
-    act = NONE;
+    Wire.write(time);
+    Wire.write(time >> 8);
+    Wire.write(time >> 16);
+    Wire.write(time >> 24);
   });
 }
 

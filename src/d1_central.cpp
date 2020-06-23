@@ -11,34 +11,6 @@ ESP8266WebServer server(80);
 
 char psk[PSK_STRLEN] = {};
 
-uint32_t getTime()
-{
-  Wire.beginTransmission(IIC);
-  Wire.write('T');
-  Wire.endTransmission();
-
-  Wire.requestFrom(IIC, 4);
-  uint32_t time = 0;
-  time |= (byte)Wire.read();
-  time |= (byte)Wire.read() << 8;
-  time |= (byte)Wire.read() << 16;
-  time |= (byte)Wire.read() << 24;
-
-  return time;
-}
-
-common::dht_data getTH() {
-  Wire.beginTransmission(IIC);
-  Wire.write('D');
-  Wire.endTransmission();
-
-  Wire.requestFrom(IIC, 2);
-  byte temp = Wire.read();
-  byte humid = Wire.read();
-
-  return {temp, humid};
-}
-
 void setup()
 {
   // delay(1000);
@@ -60,13 +32,15 @@ void setup()
   });
 
   server.on("/time", []() {
-    server.send(200, "text/plain", String(getTime()));
-  });
+    Wire.requestFrom(IIC, 4);
 
-  server.on("/th", []() {
-    common::dht_data data = getTH();
+    uint32_t time = 0;
+    time |= (byte)Wire.read();
+    time |= (byte)Wire.read() << 8;
+    time |= (byte)Wire.read() << 16;
+    time |= (byte)Wire.read() << 24;
 
-    server.send(200, "text/plain", String(data.temp) + ' ' + data.humid);
+    server.send(200, "text/plain", String(time));
   });
 
   server.begin();
