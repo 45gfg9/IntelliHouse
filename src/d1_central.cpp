@@ -12,7 +12,7 @@ ESP8266WebServer server(80);
 
 char psk[PSK_STRLEN] = {};
 
-common::weather_data parseDataFromJson(String json);
+common::weather_data fetchWeatherData();
 
 void setup()
 {
@@ -31,12 +31,9 @@ void setup()
   Serial.println(remote::AP_ip);
 
   server.on("/weather", []() {
-    common::weather_data weather = parseDataFromJson(remote::getWeatherJsonStr(psk));
+    common::weather_data weather = fetchWeatherData();
 
-    String data = weather.location + ',' + weather.temperature + ',' + weather.weather;
-
-    // " In: 22C, 80%H"
-    // "Out: 22C"
+    String data = String(weather.location) + ',' + weather.temperature + ',' + weather.weather;
 
     server.send(200, "text/plain", data);
   });
@@ -61,8 +58,10 @@ void loop()
   server.handleClient(); // non-blocking
 }
 
-common::weather_data parseDataFromJson(String json)
+common::weather_data fetchWeatherData()
 {
+  String json = remote::getWeatherJsonStr(psk);
+
   DynamicJsonDocument doc(512);
 
   deserializeJson(doc, json);

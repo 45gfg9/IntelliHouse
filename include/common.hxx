@@ -13,8 +13,8 @@ namespace common
 
     struct weather_data
     {
-        const String location;
-        const String weather;
+        const char *location;
+        const char *weather;
         const byte temperature;
     };
 

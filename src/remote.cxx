@@ -33,17 +33,20 @@ static void connectBlocking(const char *ssid, const char *pass)
 static bool connect(WiFiClient &client, String host, int port)
 {
     if (!client.connect(host, port))
-    {
         return false;
-    }
     while (!client.connected())
         ;
     return true;
 }
 
+static bool connect(WiFiClient &client, const IPAddress &host, int port)
+{
+    return connect(client, host.toString(), port);
+}
+
 static bool connectAP(WiFiClient &client)
 {
-    return connect(client, remote::AP_ip.toString(), 80);
+    return connect(client, remote::AP_ip, 80);
 }
 
 static String readResponse(WiFiClient &client, int loadTime = 500)
@@ -51,7 +54,7 @@ static String readResponse(WiFiClient &client, int loadTime = 500)
     unsigned long timeout = millis();
     while (client.available() == 0)
         if (millis() - timeout > 5000)
-            return "";
+            return String();
     delay(loadTime);
 
     return client.readString();
@@ -96,8 +99,7 @@ uint32_t remote::getTime()
     return content.toInt();
 }
 
-// TODO change return type to common::weather_data
-String remote::getWeatherData(String psk)
+String remote::getWeatherJsonStr(String psk)
 {
     static const String host(F("api.seniverse.com"));
     static const String uri(F("/v3/weather/now.json"));
@@ -107,6 +109,24 @@ String remote::getWeatherData(String psk)
     connect(client, host, 80);
     client.println(header(host, uri, partialQuery + psk));
     return parseContent(readResponse(client));
+}
+
+common::weather_data remote::getWeatherData()
+{
+    WiFiClient client;
+    connectAP(client);
+    client.println(header(AP_ip, "/weather"));
+    String content = parseContent(readResponse(client));
+
+    int sep = content.indexOf(',');
+    String location = content.substring(0, sep);
+    content = content.substring(sep + 1);
+
+    sep = content.indexOf(',');
+    String weather = content.substring(0, sep);
+    byte temp = content.substring(sep + 1).toInt();
+
+    return {location.c_str(), weather.c_str(), temp};
 }
 
 String remote::header(IPAddress host, String uri)
