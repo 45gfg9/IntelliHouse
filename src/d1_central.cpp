@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ArduinoJson.h>
 #include "remote.hxx"
 
 #define PSK_STRLEN 18
@@ -10,6 +11,8 @@
 ESP8266WebServer server(80);
 
 char psk[PSK_STRLEN] = {};
+
+common::weather_data parseDataFromJson(String json);
 
 void setup()
 {
@@ -28,7 +31,14 @@ void setup()
   Serial.println(remote::AP_ip);
 
   server.on("/weather", []() {
-    server.send(200, "text/plain", remote::getWeatherJsonStr(psk));
+    common::weather_data weather = parseDataFromJson(remote::getWeatherJsonStr(psk));
+
+    String data = weather.location + ',' + weather.temperature + ',' + weather.weather;
+
+    // " In: 22C, 80%H"
+    // "Out: 22C"
+
+    server.send(200, "text/plain", data);
   });
 
   server.on("/time", []() {
@@ -49,4 +59,21 @@ void setup()
 void loop()
 {
   server.handleClient(); // non-blocking
+}
+
+common::weather_data parseDataFromJson(String json)
+{
+  DynamicJsonDocument doc(512);
+
+  deserializeJson(doc, json);
+
+  JsonObject results_0 = doc["results"][0];
+  const char *location = results_0["location"]["name"];
+
+  JsonObject results_0_now = results_0["now"];
+  const char *weather = results_0_now["text"];
+
+  byte temp = atoi(results_0_now["temperature"]);
+
+  return {location, weather, temp};
 }

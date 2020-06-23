@@ -11,15 +11,23 @@ namespace common
         byte humid;
     };
 
-    struct close_interval
+    struct weather_data
     {
-        int upper;
-        int lower;
+        const String location;
+        const String weather;
+        const byte temperature;
+    };
 
-        bool in(int num)
-        {
-            return lower <= num && num <= upper;
-        }
+    class close_interval : public Printable
+    {
+    public:
+        const int upper;
+        const int lower;
+
+        close_interval(int upper, int lower);
+
+        bool in(int num) const;
+        size_t printTo(Print &out) const;
     };
 
     struct tah

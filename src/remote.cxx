@@ -96,11 +96,12 @@ uint32_t remote::getTime()
     return content.toInt();
 }
 
-String remote::getWeatherJsonStr(String psk)
+// TODO change return type to common::weather_data
+String remote::getWeatherData(String psk)
 {
     static const String host(F("api.seniverse.com"));
     static const String uri(F("/v3/weather/now.json"));
-    static const String partialQuery(F("?location=WQ7SF3WEPQRU&key="));
+    static const String partialQuery(F("?language=en&location=ip&key="));
 
     WiFiClient client;
     connect(client, host, 80);
@@ -125,5 +126,5 @@ String remote::header(IPAddress host, String uri, String query)
 
 String remote::header(String host, String uri, String query)
 {
-    return String(F("GET ")) += uri += query += String(F(" HTTP/1.1\r\nHost: ")) += host += String(F("\r\nConnection: close\r\n\r\n"));
+    return String(F("GET ")) + uri + query + F(" HTTP/1.1\r\nHost: ") + host + F("\r\nConnection: close\r\n\r\n");
 }

@@ -19,7 +19,7 @@ namespace remote
     void connect();
 
     uint32_t getTime();
-    String getWeatherJsonStr(String psk);
+    String getWeatherData(String psk);
 
     String header(IPAddress host, String uri);
     String header(String host, String uri);
