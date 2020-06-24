@@ -7,33 +7,41 @@ const char *remote::AP_pass = "nullptr!";
 
 IPAddress remote::AP_ip;
 
+static void gen(int pin, int delay1, int delay2)
+{
+    digitalWrite(pin, HIGH);
+    delay(delay1);
+    digitalWrite(pin, LOW);
+    delay(delay2);
+}
+
 static void connectBlocking(const char *ssid, const char *pass)
 {
     static const int LED = LED_BUILTIN;
     WiFi.begin(ssid, pass);
     pinMode(LED, OUTPUT);
+    digitalWrite(LED, LOW);
 
     for (;;)
     {
         wl_status_t status = WiFi.status();
-        if (status == WL_CONNECTED)
+        if (status == WL_CONNECTED) {
+            digitalWrite(LED, HIGH);
             break;
+        }
         else if (status == WL_CONNECT_FAILED)
-            for (;;)
             {
-                digitalWrite(LED, HIGH);
-                delay(100);
-                digitalWrite(LED, LOW);
-                delay(100);
+            for (int i = 0; i < 10; i++)
+                gen(LED, 100, 100);
+            ESP.reset();
             }
         else if (status == WL_NO_SSID_AVAIL)
-            for (int i = 1000; i > 0; i -= 100)
             {
-                digitalWrite(LED, HIGH);
-                delay(i);
-                digitalWrite(LED, LOW);
-                delay(i);
+            for (int i = 500; i > 0; i -= 50)
+                gen(LED, i, i);
+            ESP.reset();
         }
+        delay(200);
     }
 }
 
