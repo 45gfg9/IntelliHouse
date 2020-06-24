@@ -30,6 +30,10 @@ void setup()
   remote::begin();
   Serial.println(remote::AP_ip);
 
+  server.on("/", []() {
+    server.send(200, "text/plain", "Pong!");
+  });
+
   server.on("/weather", []() {
     common::weather_data weather = fetchWeatherData();
 
