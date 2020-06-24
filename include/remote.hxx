@@ -8,8 +8,8 @@
 
 namespace remote
 {
-    extern char *EX_ssid;
-    extern char *EX_pass;
+    extern const char *EX_ssid;
+    extern const char *EX_pass;
     extern const char *AP_ssid;
     extern const char *AP_pass;
 

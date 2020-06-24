@@ -9,23 +9,30 @@ IPAddress remote::AP_ip;
 
 static void connectBlocking(const char *ssid, const char *pass)
 {
+    static const int LED = LED_BUILTIN;
     WiFi.begin(ssid, pass);
+    pinMode(LED, OUTPUT);
 
     for (;;)
     {
         wl_status_t status = WiFi.status();
-        if (status == WL_CONNECTED || status == WL_IDLE_STATUS)
+        if (status == WL_CONNECTED)
             break;
         else if (status == WL_CONNECT_FAILED)
-        {
-            pinMode(LED_BUILTIN, OUTPUT);
             for (;;)
             {
-                digitalWrite(LED_BUILTIN, HIGH);
+                digitalWrite(LED, HIGH);
                 delay(100);
-                digitalWrite(LED_BUILTIN, LOW);
+                digitalWrite(LED, LOW);
                 delay(100);
             }
+        else if (status == WL_NO_SSID_AVAIL)
+            for (int i = 1000; i > 0; i -= 100)
+            {
+                digitalWrite(LED, HIGH);
+                delay(i);
+                digitalWrite(LED, LOW);
+                delay(i);
         }
     }
 }
