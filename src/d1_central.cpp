@@ -16,7 +16,7 @@ common::weather_data fetchWeatherData();
 
 void setup()
 {
-  // delay(1000);
+  delay(1000);
   Serial.begin(115200);
   Wire.begin();
 
@@ -31,18 +31,21 @@ void setup()
   Serial.println(remote::AP_ip);
 
   server.on("/", []() {
+    Serial.println("Pong!");
     server.send(200, "text/plain", "Pong!");
   });
 
   server.on("/weather", []() {
+    Serial.println("Fetching weather");
     common::weather_data weather = fetchWeatherData();
 
-    String data = String(weather.location) + ',' + weather.temperature + ',' + weather.weather;
+    String data = String(weather.location) + ',' + weather.weather + ',' + weather.temperature;
 
     server.send(200, "text/plain", data);
   });
 
   server.on("/time", []() {
+    Serial.println("Fetching time");
     Wire.requestFrom(IIC, 4);
 
     uint32_t time = 0;
@@ -70,13 +73,13 @@ common::weather_data fetchWeatherData()
 
   deserializeJson(doc, json);
 
-  JsonObject results_0 = doc["results"][0];
-  const char *location = results_0["location"]["name"];
+  JsonObject result = doc["results"][0];
+  const char *location = result["location"]["name"];
 
-  JsonObject results_0_now = results_0["now"];
-  const char *weather = results_0_now["text"];
+  JsonObject result_now = result["now"];
+  const char *weather = result_now["text"];
 
-  byte temp = atoi(results_0_now["temperature"]);
+  byte temp = atoi(result_now["temperature"]);
 
   return {location, weather, temp};
 }

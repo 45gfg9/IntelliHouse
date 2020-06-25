@@ -18,6 +18,7 @@ static void gen(int pin, int delay1, int delay2)
 static void connectBlocking(const char *ssid, const char *pass)
 {
     static const int LED = LED_BUILTIN;
+    Serial.printf_P(PSTR("Connecting to %s"), ssid);
     WiFi.begin(ssid, pass);
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
@@ -25,18 +26,22 @@ static void connectBlocking(const char *ssid, const char *pass)
     for (;;)
     {
         wl_status_t status = WiFi.status();
-        if (status == WL_CONNECTED) {
+        if (status == WL_CONNECTED)
+        {
+            Serial.println(F(" Connected!"));
             digitalWrite(LED, HIGH);
             break;
         }
         else if (status == WL_CONNECT_FAILED)
             {
+            Serial.printf_P(PSTR("Failed to connect to %s"), ssid);
             for (int i = 0; i < 10; i++)
                 gen(LED, 100, 100);
             ESP.reset();
             }
         else if (status == WL_NO_SSID_AVAIL)
             {
+            Serial.printf_P(PSTR("%s not found"), ssid);
             for (int i = 500; i > 0; i -= 50)
                 gen(LED, i, i);
             ESP.reset();
@@ -48,9 +53,14 @@ static void connectBlocking(const char *ssid, const char *pass)
 static bool connect(WiFiClient &client, String host, int port)
 {
     if (!client.connect(host, port))
+    {
+        Serial.println(F("Connection failed"));
         return false;
+    }
+    Serial.println(F("Establishing"));
     while (!client.connected())
         ;
+    Serial.println(F("Established"));
     return true;
 }
 
@@ -70,6 +80,7 @@ static String readResponse(WiFiClient &client, int loadTime = 500)
     while (client.available() == 0)
         if (millis() - timeout > 5000)
             return String();
+    Serial.println(F("Receiving"));
     delay(loadTime);
 
     return client.readString();
@@ -122,6 +133,7 @@ String remote::getWeatherJsonStr(String psk)
 
     WiFiClient client;
     connect(client, host, 80);
+    Serial.println("Posting headers");
     client.println(header(host, uri, partialQuery + psk));
     return parseContent(readResponse(client));
 }
