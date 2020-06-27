@@ -16,18 +16,26 @@ void setup()
 
   rtc.begin();
 
-  Wire.onRequest([]() {
+  Wire.onRequest([&]() {
     uint32_t time = rtc.now().unixtime();
+    Serial.print(F("Now: "));
+    Serial.println(time);
 
-    Wire.write(time);
-    Wire.write(time >> 8);
-    Wire.write(time >> 16);
-    Wire.write(time >> 24);
+    common::write_uint32_t(Wire, LSBFIRST, time);
+  });
+
+  Wire.onReceive([&](int n) {
+    Serial.print(F("Received "));
+    Serial.println(n);
+    // FIXME error reading
+    uint32_t epoch = common::read_uint32_t(Wire, LSBFIRST);
+
+    Serial.println(epoch);
+
+    rtc.adjust(DateTime(epoch));
   });
 }
 
 void loop()
 {
-  // Serial.println("?");
-  // delay(2000);
 }

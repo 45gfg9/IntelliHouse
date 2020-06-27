@@ -5,6 +5,9 @@
 
 namespace common
 {
+    size_t write_uint32_t(Stream &stream, uint8_t order, uint32_t val);
+    uint32_t read_uint32_t(Stream &stream, uint8_t order);
+
     struct dht_data
     {
         byte temp;
@@ -21,10 +24,10 @@ namespace common
     class close_interval : public Printable
     {
     public:
-        const int upper;
         const int lower;
+        const int upper;
 
-        close_interval(int upper, int lower);
+        close_interval(int lower, int upper);
 
         bool in(int num) const;
         size_t printTo(Print &out) const;

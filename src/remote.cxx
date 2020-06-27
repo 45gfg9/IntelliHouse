@@ -1,11 +1,11 @@
 #include "remote.hxx"
 
-char *remote::EX_ssid = nullptr;
-char *remote::EX_pass = nullptr;
+const char *remote::EX_ssid = nullptr;
+const char *remote::EX_pass = nullptr;
 const char *remote::AP_ssid = "SH_FFF";
 const char *remote::AP_pass = "nullptr!";
 
-IPAddress remote::AP_ip;
+IPAddress remote::AP_ip(192, 168, 4, 1);
 
 static void gen(int pin, int delay1, int delay2)
 {
@@ -33,19 +33,20 @@ static void connectBlocking(const char *ssid, const char *pass)
             break;
         }
         else if (status == WL_CONNECT_FAILED)
-            {
+        {
             Serial.printf_P(PSTR("Failed to connect to %s"), ssid);
             for (int i = 0; i < 10; i++)
                 gen(LED, 100, 100);
             ESP.reset();
-            }
+        }
         else if (status == WL_NO_SSID_AVAIL)
-            {
+        {
             Serial.printf_P(PSTR("%s not found"), ssid);
             for (int i = 500; i > 0; i -= 50)
                 gen(LED, i, i);
             ESP.reset();
         }
+        Serial.print(F("."));
         delay(200);
     }
 }
@@ -104,8 +105,12 @@ void remote::begin()
     {
         WiFi.mode(WIFI_AP);
     }
+    Serial.print(F("Local IP: "));
+    Serial.println(WiFi.localIP());
+
     WiFi.softAP(AP_ssid, AP_pass);
-    remote::AP_ip = WiFi.softAPIP();
+    Serial.print(F("AP IP: "));
+    Serial.println(WiFi.softAPIP());
 }
 
 void remote::connect()
@@ -125,6 +130,16 @@ uint32_t remote::getTime()
     return content.toInt();
 }
 
+uint32_t remote::getNTPTime()
+{
+    WiFiClient client;
+    connectAP(client);
+    client.println(header(AP_ip, "/ntp"));
+    String content = parseContent(readResponse(client));
+
+    return content.toInt();
+}
+
 String remote::getWeatherJsonStr(String psk)
 {
     static const String host(F("api.seniverse.com"));
@@ -133,7 +148,7 @@ String remote::getWeatherJsonStr(String psk)
 
     WiFiClient client;
     connect(client, host, 80);
-    Serial.println("Posting headers");
+    Serial.println(F("Posting headers"));
     client.println(header(host, uri, partialQuery + psk));
     return parseContent(readResponse(client));
 }
@@ -154,16 +169,6 @@ common::weather_data remote::getWeatherData()
     byte temp = content.substring(sep + 1).toInt();
 
     return {location.c_str(), weather.c_str(), temp};
-}
-
-String remote::header(IPAddress host, String uri)
-{
-    return header(host.toString(), uri, "");
-}
-
-String remote::header(String host, String uri)
-{
-    return header(host, uri, "");
 }
 
 String remote::header(IPAddress host, String uri, String query)

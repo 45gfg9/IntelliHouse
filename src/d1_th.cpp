@@ -46,9 +46,12 @@ void updateFun()
     static char indoor[LCD_BUF];
 
     byte temp, humid;
-    if ((dht.read(&temp, &humid, nullptr)) == SimpleDHTErrSuccess) {
+    if ((dht.read(&temp, &humid, nullptr)) == SimpleDHTErrSuccess)
+    {
         snprintf_P(indoor, LCD_BUF, PSTR("%dC %d%%H"), temp, humid);
-    } else {
+    }
+    else
+    {
         strncpy_P(indoor, PSTR("Error"), LCD_BUF);
     }
 
