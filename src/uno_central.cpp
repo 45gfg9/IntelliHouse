@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <RTClib.h>
-#include <SimpleDHT.h>
 #include "common.hxx"
 
 static const int RTC_CLK = 8;
