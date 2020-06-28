@@ -130,16 +130,6 @@ uint32_t remote::getTime()
     return content.toInt();
 }
 
-uint32_t remote::getNTPTime()
-{
-    WiFiClient client;
-    connectAP(client);
-    client.println(header(AP_ip, "/ntp"));
-    String content = parseContent(readResponse(client));
-
-    return content.toInt();
-}
-
 String remote::getWeatherJsonStr(String psk)
 {
     static const String host(F("api.seniverse.com"));

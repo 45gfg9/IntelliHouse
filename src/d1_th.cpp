@@ -4,14 +4,13 @@
 #include <LiquidCrystal_I2C.h>
 #include "remote.hxx"
 
-#define LCD_BUF 40
-
 static const int DHT_PIN = 5;
+static const byte LCD_ADDR = 0x27;
 SimpleDHT11 dht(DHT_PIN);
 
 Ticker update;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(LCD_ADDR, 16, 2);
 
 static const int update_s = 30;
 
@@ -42,6 +41,7 @@ void loop()
 
 void updateFun()
 {
+    static const size_t LCD_BUF = 40;
     static char line[LCD_BUF];
     static char indoor[LCD_BUF];
 

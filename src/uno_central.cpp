@@ -1,3 +1,5 @@
+#error Deprecated
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <RTClib.h>
