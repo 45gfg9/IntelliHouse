@@ -9,7 +9,7 @@
 
 static const int udpPort = 1337;
 
-ESP8266WebServer server(80);
+ESP8266WebServer server(SERVER_PORT);
 WiFiUDP udp;
 
 common::weather_data fetchWeatherData();

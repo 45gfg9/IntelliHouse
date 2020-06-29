@@ -77,7 +77,7 @@ static bool connect(WiFiClient &client, const IPAddress &host, int port)
 
 static bool connectAP(WiFiClient &client)
 {
-    return connect(client, remote::AP_ip, 80);
+    return connect(client, remote::AP_ip, SERVER_PORT);
 }
 
 static String readResponse(WiFiClient &client, int loadTime = 500)

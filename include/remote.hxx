@@ -6,6 +6,8 @@
 #include <Wire.h>
 #include "common.hxx"
 
+#define SERVER_PORT 80
+
 namespace remote
 {
     extern const char *EX_ssid;
