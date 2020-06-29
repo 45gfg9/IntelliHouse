@@ -36,7 +36,6 @@ void setup()
     common::weather_data weather = fetchWeatherData();
 
     String data = String(weather.location) + ',' + weather.weather + ',' + weather.temperature;
-
     server.send(200, "text/plain", data);
   });
 
@@ -51,10 +50,12 @@ void setup()
 
   server.on("/time", [&]() {
     Serial.println(F("Fetching time"));
-
     uint32_t epoch = fetchTime();
-
     server.send(200, "text/plain", String(epoch));
+  });
+
+  server.onNotFound([&]() {
+    server.send_P(404, "text/plain", PSTR("Where are you looking at?!"));
   });
 
   server.begin();
@@ -122,7 +123,6 @@ common::weather_data fetchWeatherData()
   String json = remote::getWeatherJsonStr(psk);
 
   DynamicJsonDocument doc(512);
-
   deserializeJson(doc, json);
 
   JsonObject result = doc["results"][0];

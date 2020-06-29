@@ -20,6 +20,10 @@ void updateFun();
 
 void setup()
 {
+    delay(1000);
+    Serial.begin(115200);
+    Serial.println();
+
     remote::connect();
 
     lcd.init();
@@ -31,11 +35,13 @@ void setup()
 
 void loop()
 {
-    // .5s * 20 + 10s = 20s
-    // 300s / 20s = 15
-    delay(500);
-    if ((scroll_counter % 40) == 0)
-        delay(10000);
+    // TODO Change the way it displays
+
+    // .75s * 40 + 30s = 60s
+    // 300s / 60s = 5
+    delay(750);
+    if ((scroll_counter++ % 40) == 0)
+        delay(30000);
     lcd.scrollDisplayLeft();
 }
 
@@ -55,6 +61,7 @@ void updateFun()
         strncpy_P(indoor, PSTR("Error"), LCD_BUF);
     }
 
+    // FIXME connection to gateway board fails
     common::weather_data data = remote::getWeatherData();
 
     snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location, data.temperature);

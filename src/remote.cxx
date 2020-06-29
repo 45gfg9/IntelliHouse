@@ -5,7 +5,7 @@ const char *remote::EX_pass = nullptr;
 const char *remote::AP_ssid = "SH_FFF";
 const char *remote::AP_pass = "nullptr!";
 
-IPAddress remote::AP_ip(192, 168, 4, 1);
+IPAddress remote::AP_ip;
 
 static void gen(int pin, int delay1, int delay2)
 {
@@ -55,13 +55,18 @@ static bool connect(WiFiClient &client, String host, int port)
 {
     if (!client.connect(host, port))
     {
-        Serial.println(F("Connection failed"));
+        Serial.print(F("Failed connecting to "));
+        Serial.println(host);
         return false;
     }
-    Serial.println(F("Establishing"));
+    Serial.print(F("Establishing connection to "));
+    Serial.print(host);
     while (!client.connected())
-        ;
-    Serial.println(F("Established"));
+    {
+        Serial.print(F("."));
+        delay(200);
+    }
+    Serial.println(F(" Established!"));
     return true;
 }
 
@@ -105,10 +110,10 @@ void remote::begin()
     {
         WiFi.mode(WIFI_AP);
     }
+    WiFi.softAP(AP_ssid, AP_pass);
+
     Serial.print(F("Local IP: "));
     Serial.println(WiFi.localIP());
-
-    WiFi.softAP(AP_ssid, AP_pass);
     Serial.print(F("AP IP: "));
     Serial.println(WiFi.softAPIP());
 }
@@ -118,6 +123,13 @@ void remote::connect()
     WiFi.mode(WIFI_STA);
 
     connectBlocking(AP_ssid, AP_pass);
+
+    Serial.print(F("Local IP: "));
+    Serial.println(WiFi.localIP());
+    Serial.print(F("Gateway IP: "));
+    Serial.println(WiFi.gatewayIP());
+
+    remote::AP_ip = WiFi.gatewayIP();
 }
 
 uint32_t remote::getTime()

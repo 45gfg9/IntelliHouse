@@ -52,14 +52,18 @@ void checkInput()
     char c = keypad.getKey();
     if (!c)
         return;
+    Serial.print(c);
     switch (c)
     {
     case '#':
+        Serial.println();
         if (str.length())
             handleResult(verifyPass(str));
         else
             break;
+
     case '*':
+        Serial.println();
         str.clear();
         break;
 
