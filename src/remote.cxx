@@ -51,7 +51,7 @@ static void connectBlocking(const char *ssid, const char *pass)
     }
 }
 
-static bool connect(WiFiClient &client, String host, int port)
+static bool connect(WiFiClient &client, const IPAddress &host, int port)
 {
     if (!client.connect(host, port))
     {
@@ -70,9 +70,17 @@ static bool connect(WiFiClient &client, String host, int port)
     return true;
 }
 
-static bool connect(WiFiClient &client, const IPAddress &host, int port)
+static bool connect(WiFiClient &client, const char *host, int port)
 {
-    return connect(client, host.toString(), port);
+    IPAddress addr;
+    if (!WiFi.hostByName(host, addr))
+        return false;
+    return connect(client, addr, port);
+}
+
+static bool connect(WiFiClient &client, String host, int port)
+{
+    return connect(client, host.c_str(), port);
 }
 
 static bool connectAP(WiFiClient &client)
@@ -136,7 +144,7 @@ uint32_t remote::getTime()
 {
     WiFiClient client;
     connectAP(client);
-    client.println(header(AP_ip, "/time"));
+    client.print(header(AP_ip, "/time"));
     String content = parseContent(readResponse(client));
 
     return content.toInt();
@@ -151,7 +159,7 @@ String remote::getWeatherJsonStr(String psk)
     WiFiClient client;
     connect(client, host, 80);
     Serial.println(F("Posting headers"));
-    client.println(header(host, uri, partialQuery + psk));
+    client.print(header(host, uri, partialQuery + psk));
     return parseContent(readResponse(client));
 }
 
@@ -159,7 +167,7 @@ common::weather_data remote::getWeatherData()
 {
     WiFiClient client;
     connectAP(client);
-    client.println(header(AP_ip, "/weather"));
+    client.print(header(AP_ip, "/weather"));
     String content = parseContent(readResponse(client));
 
     int sep = content.indexOf(',');
