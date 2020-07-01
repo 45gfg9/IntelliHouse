@@ -64,7 +64,7 @@ void updateFun()
     // FIXME connection to gateway board fails
     common::weather_data data = remote::getWeatherData();
 
-    snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location, data.temperature);
+    snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location.c_str(), data.temperature);
 
     scroll_counter = 0;
     lcd.clear();

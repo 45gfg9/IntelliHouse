@@ -182,7 +182,7 @@ common::weather_data remote::getWeatherData()
     String weather = content.substring(0, sep);
     byte temp = content.substring(sep + 1).toInt();
 
-    return {location.c_str(), weather.c_str(), temp};
+    return {location, weather, temp};
 }
 
 String remote::header(IPAddress host, String uri, String query)
