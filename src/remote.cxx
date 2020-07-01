@@ -41,7 +41,7 @@ static void connectBlocking(const char *ssid, const char *pass)
                 gen(LED, i, i);
             ESP.reset();
         }
-        Serial.print(F("."));
+        Serial.print('.');
         delay(200);
     }
 }
@@ -50,7 +50,7 @@ static bool connect(WiFiClient &client, const IPAddress &host, int port)
 {
     if (!client.connect(host, port))
     {
-        Serial.print(F("Failed connecting to "));
+        Serial.print(F("Failed to connect to "));
         Serial.println(host);
         return false;
     }
@@ -58,10 +58,10 @@ static bool connect(WiFiClient &client, const IPAddress &host, int port)
     Serial.print(host);
     while (!client.connected())
     {
-        Serial.print(F("."));
+        Serial.print('.');
         delay(200);
     }
-    Serial.println(F(" Established!"));
+    Serial.println(F(". Established!"));
     return true;
 }
 
@@ -83,7 +83,7 @@ static bool connectAP(WiFiClient &client)
     return connect(client, remote::AP_ip, SERVER_PORT);
 }
 
-static String readResponse(WiFiClient &client, int timeout = 5000, int loadTime = 500)
+static String readResponse(WiFiClient &client, unsigned long loadTime = 500, unsigned long timeout = 10000)
 {
     unsigned long start = millis();
     while (client.available() == 0)
@@ -102,10 +102,10 @@ static String readResponse(WiFiClient &client, int timeout = 5000, int loadTime 
 
 static String parseContent(String content)
 {
+    if (content.length() == 0)
+        return content;
     int idx = content.indexOf("\r\n\r\n");
 
-    if (idx == -1)
-        return emptyString;
     return content.substring(idx + 4);
 }
 
