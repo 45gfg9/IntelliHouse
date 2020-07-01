@@ -1,10 +1,5 @@
 #include "remote.hxx"
 
-const char *remote::EX_ssid = nullptr;
-const char *remote::EX_pass = nullptr;
-const char *remote::AP_ssid = "SH_FFF";
-const char *remote::AP_pass = "nullptr!";
-
 IPAddress remote::AP_ip;
 
 static void gen(int pin, int delay1, int delay2)
@@ -88,12 +83,17 @@ static bool connectAP(WiFiClient &client)
     return connect(client, remote::AP_ip, SERVER_PORT);
 }
 
-static String readResponse(WiFiClient &client, int loadTime = 500)
+static String readResponse(WiFiClient &client, int timeout = 5000, int loadTime = 500)
 {
-    unsigned long timeout = millis();
+    unsigned long start = millis();
     while (client.available() == 0)
-        if (millis() - timeout > 5000)
-            return String();
+    {
+        if (millis() - start > timeout)
+        {
+            Serial.println("Connection timeout");
+            return emptyString;
+        }
+    }
     Serial.println(F("Receiving"));
     delay(loadTime);
 
@@ -104,21 +104,23 @@ static String parseContent(String content)
 {
     int idx = content.indexOf("\r\n\r\n");
 
+    if (idx == -1)
+        return emptyString;
     return content.substring(idx + 4);
 }
 
 void remote::begin()
 {
-    if (EX_ssid != nullptr)
+    if (EX_SSID != nullptr)
     {
         WiFi.mode(WIFI_AP_STA);
-        connectBlocking(EX_ssid, EX_pass);
+        connectBlocking(EX_SSID, EX_PASS);
     }
     else
     {
         WiFi.mode(WIFI_AP);
     }
-    WiFi.softAP(AP_ssid, AP_pass);
+    WiFi.softAP(AP_SSID, AP_PASS);
 
     Serial.print(F("Gateway IP: "));
     Serial.println(WiFi.gatewayIP());
@@ -132,7 +134,7 @@ void remote::connect()
 {
     WiFi.mode(WIFI_STA);
 
-    connectBlocking(AP_ssid, AP_pass);
+    connectBlocking(AP_SSID, AP_PASS);
 
     Serial.print(F("Gateway IP: "));
     Serial.println(WiFi.gatewayIP());

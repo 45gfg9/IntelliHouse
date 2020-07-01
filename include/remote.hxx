@@ -8,13 +8,13 @@
 
 #define SERVER_PORT 80
 
+#define EX_SSID nullptr
+#define EX_PASS nullptr
+#define AP_SSID "SH_FFF"
+#define AP_PASS "nullptr!"
+
 namespace remote
 {
-    extern const char *EX_ssid;
-    extern const char *EX_pass;
-    extern const char *AP_ssid;
-    extern const char *AP_pass;
-
     extern IPAddress AP_ip;
 
     void begin();
