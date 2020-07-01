@@ -120,6 +120,8 @@ void remote::begin()
     }
     WiFi.softAP(AP_ssid, AP_pass);
 
+    Serial.print(F("Gateway IP: "));
+    Serial.println(WiFi.gatewayIP());
     Serial.print(F("Local IP: "));
     Serial.println(WiFi.localIP());
     Serial.print(F("AP IP: "));
@@ -132,10 +134,10 @@ void remote::connect()
 
     connectBlocking(AP_ssid, AP_pass);
 
-    Serial.print(F("Local IP: "));
-    Serial.println(WiFi.localIP());
     Serial.print(F("Gateway IP: "));
     Serial.println(WiFi.gatewayIP());
+    Serial.print(F("Local IP: "));
+    Serial.println(WiFi.localIP());
 
     remote::AP_ip = WiFi.gatewayIP();
 }
