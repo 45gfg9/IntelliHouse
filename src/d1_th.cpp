@@ -30,21 +30,22 @@ void setup()
 
     lcd.init();
     lcd.backlight();
-    lcd.clear();
 
-    update.attach(UPDATE_S, updateFun);
+    // update.attach(UPDATE_S, updateFun); // FIXME CULPRIT
 }
 
 void loop()
 {
-    // TODO Change the way it displays
+    // TODO rewrite
 
     // .75s * 40 + 30s = 60s
     // 300s / 60s = 5
-    delay(750);
-    if ((scroll_counter++ % 40) == 0)
-        delay(30000);
-    lcd.scrollDisplayLeft();
+    // delay(750);
+    // if ((scroll_counter++ % 40) == 0)
+    //     delay(30000);
+    // lcd.scrollDisplayLeft();
+    // updateFun();
+    // delay(30000);
 }
 
 void updateFun()
@@ -63,7 +64,6 @@ void updateFun()
         strncpy_P(indoor, PSTR("Error"), LCD_BUF);
     }
 
-    // FIXME connection to gateway board fails
     common::weather_data data = remote::getWeatherData();
 
     snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location.c_str(), data.temperature);
