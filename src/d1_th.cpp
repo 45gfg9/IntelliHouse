@@ -5,14 +5,16 @@
 #include "remote.hxx"
 
 static const int DHT_PIN = 5;
+
 static const byte LCD_ADDR = 0x27;
+static const byte LCD_COLS = 16;
+static const byte LCD_ROWS = 2;
+
+static const int UPDATE_S = 30;
+
 SimpleDHT11 dht(DHT_PIN);
-
+LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
 Ticker update;
-
-LiquidCrystal_I2C lcd(LCD_ADDR, 16, 2);
-
-static const int update_s = 30;
 
 int scroll_counter = 0;
 
@@ -30,7 +32,7 @@ void setup()
     lcd.backlight();
     lcd.clear();
 
-    update.attach(update_s, updateFun);
+    update.attach(UPDATE_S, updateFun);
 }
 
 void loop()
