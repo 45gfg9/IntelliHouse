@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <Wire.h>
 #include "common.hxx"
 
 #define SERVER_PORT 80

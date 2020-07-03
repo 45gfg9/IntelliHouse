@@ -29,14 +29,14 @@ static void connectBlocking(const char *ssid, const char *pass)
         }
         else if (status == WL_CONNECT_FAILED)
         {
-            Serial.printf_P(PSTR("Failed to connect to %s"), ssid);
+            Serial.printf_P(PSTR(" Failed to connect to %s"), ssid);
             for (int i = 0; i < 10; i++)
                 gen(LED, 100, 100);
             ESP.reset();
         }
         else if (status == WL_NO_SSID_AVAIL)
         {
-            Serial.printf_P(PSTR("%s not found"), ssid);
+            Serial.printf_P(PSTR(" %s not found"), ssid);
             for (int i = 500; i > 0; i -= 50)
                 gen(LED, i, i);
             ESP.reset();
@@ -147,7 +147,8 @@ void remote::connect()
 uint32_t remote::getTime()
 {
     WiFiClient client;
-    connectAP(client);
+    if (!connectAP(client))
+        return 0;
     client.print(header(AP_ip, "/time"));
     String content = parseContent(readResponse(client));
 
@@ -161,7 +162,8 @@ String remote::getWeatherJsonStr(String psk)
     static const String partialQuery(F("?language=en&location=ip&key="));
 
     WiFiClient client;
-    connect(client, host, 80);
+    if (!connect(client, host, 80))
+        return emptyString;
     Serial.println(F("Posting headers"));
     client.print(header(host, uri, partialQuery + psk));
     return parseContent(readResponse(client));
@@ -170,9 +172,14 @@ String remote::getWeatherJsonStr(String psk)
 common::weather_data remote::getWeatherData()
 {
     WiFiClient client;
-    connectAP(client);
+    if (!connectAP(client))
+        return {"CF", "CF", 0};
+
     client.print(header(AP_ip, "/weather"));
     String content = parseContent(readResponse(client));
+
+    if (content.length() == 0)
+        return common::emptyData;
 
     int sep = content.indexOf(',');
     String location = content.substring(0, sep);

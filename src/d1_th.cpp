@@ -26,10 +26,12 @@ void setup()
     Serial.begin(115200);
     Serial.println();
 
-    remote::connect();
-
     lcd.init();
     lcd.backlight();
+    lcd.print("Initializing");
+
+    remote::connect();
+    lcd.clear();
 
     // update.attach(UPDATE_S, updateFun); // FIXME CULPRIT
 }
@@ -54,6 +56,8 @@ void updateFun()
     static char line[LCD_BUF];
     static char indoor[LCD_BUF];
 
+    common::weather_data data = remote::getWeatherData();
+
     byte temp, humid;
     if ((dht.read(&temp, &humid, nullptr)) == SimpleDHTErrSuccess)
     {
@@ -63,8 +67,6 @@ void updateFun()
     {
         strncpy_P(indoor, PSTR("Error"), LCD_BUF);
     }
-
-    common::weather_data data = remote::getWeatherData();
 
     snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location.c_str(), data.temperature);
 

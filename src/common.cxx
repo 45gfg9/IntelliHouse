@@ -1,5 +1,7 @@
 #include "common.hxx"
 
+common::weather_data common::emptyData = {"Unknown", "Unknown", 0};
+
 size_t common::write_uint32_t(Stream &stream, uint8_t order, uint32_t val)
 {
     int written = 0;

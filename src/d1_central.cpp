@@ -21,36 +21,36 @@ void setup()
   Serial.begin(115200);
   Serial.println();
 
-  // Wire.begin();
-
   remote::begin();
   udp.begin(udpPort);
 
   server.on("/", [&]() {
     Serial.println(F("Pong!"));
-    server.send(200, "text/plain", "Pong!");
+    server.send_P(200, "text/plain", PSTR("Pong!"));
   });
 
   server.on("/weather", [&]() {
     Serial.println(F("Fetching weather"));
-    common::weather_data weather = fetchWeatherData();
-
-    String data = String(weather.location) + ',' + weather.weather + ',' + weather.temperature;
+    String data;
+    if (WiFi.getMode() == WIFI_AP_STA)
+    {
+      common::weather_data weather = fetchWeatherData();
+      data = weather.location + ',' + weather.weather + ',' + weather.temperature;
+    }
+    else
+    {
+      data = "NC,NC,0";
+    }
     server.send(200, "text/plain", data);
   });
 
-  // server.on("/time", [&]() {
-  //   Serial.println(F("Fetching time"));
-  //   Wire.requestFrom(IIC, 4);
-
-  //   uint32_t time = common::read_uint32_t(Wire, LSBFIRST);
-
-  //   server.send(200, "text/plain", String(time));
-  // });
-
   server.on("/time", [&]() {
     Serial.println(F("Fetching time"));
-    uint32_t epoch = fetchTime();
+    uint32_t epoch;
+    if (WiFi.getMode() == WIFI_AP_STA)
+      epoch = fetchTime();
+    else
+      epoch = millis() / 1000;
     server.send(200, "text/plain", String(epoch));
   });
 
@@ -59,10 +59,6 @@ void setup()
   });
 
   server.begin();
-
-  // Wire.beginTransmission(IIC);
-  // common::write_uint32_t(Wire, LSBFIRST, fetchTime());
-  // Wire.endTransmission();
 }
 
 void loop()
@@ -74,6 +70,7 @@ uint32_t fetchTime()
 {
   static const size_t NTP_PACKET_SIZE = 48;
   static const uint32_t SEVENTY_YEARS = 2208988800UL;
+  static const uint32_t TIMEOUT = 1000;
   static IPAddress ntpIP;
   static byte buf[NTP_PACKET_SIZE];
 
@@ -92,8 +89,15 @@ uint32_t fetchTime()
   udp.write(buf, NTP_PACKET_SIZE);
   udp.endPacket();
 
+  unsigned long start = millis();
   while (!udp.parsePacket())
-    ;
+  {
+    if (millis() - start >= TIMEOUT)
+    {
+      Serial.println(F("Timeout waiting for UDP response"));
+      return 0;
+    }
+  }
   Serial.println(F("Receiving packet"));
   udp.read(buf, NTP_PACKET_SIZE);
 
@@ -108,19 +112,21 @@ uint32_t fetchTime()
 
 common::weather_data fetchWeatherData()
 {
-  static const byte PSK_STRLEN = 18;
+  static const size_t PSK_STRLEN = 18;
   static char psk[PSK_STRLEN];
 
   if (*psk == 0)
   {
     EEPROM.begin(PSK_STRLEN);
-    for (int i = 0; i < PSK_STRLEN; i++)
+    for (size_t i = 0; i < PSK_STRLEN; i++)
       psk[i] = EEPROM.read(i);
     EEPROM.end();
     Serial.println(psk);
   }
 
   String json = remote::getWeatherJsonStr(psk);
+  if (json.length() == 0)
+    return common::emptyData;
 
   DynamicJsonDocument doc(512);
   deserializeJson(doc, json);

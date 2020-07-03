@@ -20,6 +20,7 @@ namespace common
         String weather;
         const byte temperature;
     };
+    extern weather_data emptyData;
 
     class close_interval : public Printable
     {
