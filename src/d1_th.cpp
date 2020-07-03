@@ -4,7 +4,7 @@
 #include <LiquidCrystal_I2C.h>
 #include "remote.hxx"
 
-static const int DHT_PIN = 5;
+static const int DHT_PIN = D5;
 
 static const byte LCD_ADDR = 0x27;
 static const byte LCD_COLS = 16;
