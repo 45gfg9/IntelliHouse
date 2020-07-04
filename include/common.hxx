@@ -18,9 +18,9 @@ namespace common
     {
         String location;
         String weather;
-        const byte temperature;
+        int temperature;
     };
-    extern weather_data emptyData;
+    extern const weather_data emptyData;
 
     class close_interval : public Printable
     {
