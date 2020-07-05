@@ -23,8 +23,8 @@ namespace remote
     String getWeatherJsonStr(String psk);
     common::weather_data getWeatherData();
 
-    String header(IPAddress host, String uri, String query = "");
-    String header(String host, String uri, String query = "");
+    String header(IPAddress host, String uri, String query = emptyString);
+    String header(String host, String uri, String query = emptyString);
 } // namespace remote
 
 #endif // __SH_REMOTE_H__

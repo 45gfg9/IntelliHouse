@@ -141,7 +141,7 @@ void remote::connect()
     Serial.print(F("Local IP: "));
     Serial.println(WiFi.localIP());
 
-    remote::AP_ip = WiFi.gatewayIP();
+    AP_ip = WiFi.gatewayIP();
 }
 
 uint32_t remote::getTime()
