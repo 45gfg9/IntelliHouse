@@ -3,6 +3,8 @@
 #include "remote.hxx"
 #include <Keypad.h>
 
+static const byte MAX_PASS_PER_MIN = 8;
+
 char keymap[4][4] = {
     {'1', '2', '3', 'A'},
     {'4', '5', '6', 'B'},
@@ -15,7 +17,8 @@ byte colPins[4] = {9, 8, 7, 6};
 
 Keypad keypad(makeKeymap(keymap), rowPins, colPins, 4, 4);
 
-String getRandPass(uint32_t n);
+String getRandPass(uint32_t seed);
+String getRandPass(uint32_t seed, byte nth);
 void checkInput();
 bool verifyPass(const String &str);
 void handleResult(bool success);
@@ -30,10 +33,33 @@ void loop()
     checkInput();
 }
 
-String getPass(uint32_t n)
+String getRandPass(uint32_t seed)
+{
+    static uint32_t prev_seed = 0;
+    static byte counter = 0;
+
+    if (prev_seed != seed)
+    {
+        prev_seed = seed;
+        counter = 0;
+    }
+
+    if (counter >= MAX_PASS_PER_MIN)
+        counter = 0;
+
+    return getRandPass(seed, counter++);
+}
+
+String getRandPass(uint32_t seed, byte nth)
 {
     static const char map[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                '8', '9', 'A', 'B', 'C', 'D'};
+
+    int n;
+    srand(seed);
+    for (int i = 0; i < nth; i++)
+        rand();
+    n = rand();
 
     char otp[6];
     uint8_t hash[20];
@@ -78,13 +104,13 @@ bool verifyPass(const String &str)
     if (str.length() != 5)
         return false;
 
-    uint32_t this_min = remote::getTime() / 60,
-             prev_min = this_min - 1,
-             prev_prev_min = prev_min - 1;
+    uint32_t now_min = remote::getTime() / 60;
+    for (int i = 0; i < 3; i++)
+        for (byte j = 0; j < MAX_PASS_PER_MIN; j++)
+            if (getRandPass(now_min - i, j).equals(str))
+                return true;
 
-    return (str == getPass(this_min) ||
-            str == getPass(prev_min) ||
-            str == getPass(prev_prev_min));
+    return false;
 }
 
 void handleResult(bool success)
