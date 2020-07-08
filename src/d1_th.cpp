@@ -7,8 +7,8 @@
 static const int DHT_PIN = D5;
 
 static const byte LCD_ADDR = 0x27;
-static const byte LCD_COLS = 16;
-static const byte LCD_ROWS = 2;
+static const byte LCD_COLS = 20;
+static const byte LCD_ROWS = 4;
 
 static const int UPDATE_S = 30;
 
@@ -18,6 +18,7 @@ Ticker update;
 
 int scroll_counter = 0;
 
+String epoch2str(uint32_t t);
 void updateFun();
 
 void setup()
@@ -50,12 +51,54 @@ void loop()
     // delay(30000);
 }
 
+String epoch2str(uint32_t t)
+{
+    static const uint32_t SECONDS_FROM_1970_TO_2000 = 946684800UL;
+    static const byte DAYS_IN_MONTH[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    static char buf[20];
+
+    t -= SECONDS_FROM_1970_TO_2000;
+    byte sec = t % 60;
+    t /= 60;
+    byte min = t % 60;
+    t /= 60;
+    byte hr = t % 24;
+    unsigned int day = t / 24;
+    byte month;
+    byte year;
+    bool leap;
+    for (year = 0;; year++)
+    {
+        leap = year % 4 == 0;
+        if (day < 365 + leap)
+            break;
+        day -= 365 + leap;
+    }
+
+    for (month = 1;; month++)
+    {
+        uint8_t daysPerMonth = daysPerMonth + month - 1;
+        if (leap && month == 2)
+            daysPerMonth++;
+        if (day < daysPerMonth)
+            break;
+        day -= daysPerMonth;
+    }
+    day++;
+
+    snprintf_P(buf, 20, PSTR("%d/%d/%d %d:%d:%d"),
+               year, month, day, hr, min, sec);
+
+    return String(buf);
+}
+
 void updateFun()
 {
     static const size_t LCD_BUF = 40;
     static char line[LCD_BUF];
     static char indoor[LCD_BUF];
 
+    uint32_t epoch = remote::getTime();
     common::weather_data data = remote::getWeatherData();
 
     byte temp, humid;
