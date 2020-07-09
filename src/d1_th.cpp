@@ -1,25 +1,23 @@
 #include <Arduino.h>
-#include <Ticker.h>
 #include <SimpleDHT.h>
 #include <LiquidCrystal_I2C.h>
+#include <TickerScheduler.h>
 #include "remote.hxx"
 
-static const int DHT_PIN = D5;
-
-static const byte LCD_ADDR = 0x27;
-static const byte LCD_COLS = 20;
-static const byte LCD_ROWS = 4;
-
-static const int UPDATE_S = 30;
+#define DHT_PIN D5
+#define LCD_ADDR 0x27
+#define LCD_COLS 20
+#define LCD_ROWS 4
+#define UPDATE_INTERVAL 30
 
 SimpleDHT11 dht(DHT_PIN);
 LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
-Ticker update;
+TickerScheduler tickers(2);
 
 int scroll_counter = 0;
 
 String epoch2str(uint32_t t);
-void updateFun();
+void updateFun(void *);
 
 void setup()
 {
@@ -34,21 +32,19 @@ void setup()
     remote::connect();
     lcd.clear();
 
-    // update.attach(UPDATE_S, updateFun); // FIXME CULPRIT
+    tickers.add(0, UPDATE_INTERVAL * 1000, updateFun, nullptr, true);
+    tickers.add(
+        1, 20000, [&](void *) {}, nullptr, false);
 }
 
 void loop()
 {
-    // TODO rewrite
-
     // .75s * 40 + 30s = 60s
     // 300s / 60s = 5
     // delay(750);
     // if ((scroll_counter++ % 40) == 0)
     //     delay(30000);
     // lcd.scrollDisplayLeft();
-    // updateFun();
-    // delay(30000);
 }
 
 String epoch2str(uint32_t t)
@@ -92,7 +88,7 @@ String epoch2str(uint32_t t)
     return String(buf);
 }
 
-void updateFun()
+void updateFun(void *)
 {
     static const size_t LCD_BUF = 40;
     static char line[LCD_BUF];

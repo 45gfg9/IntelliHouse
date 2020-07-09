@@ -55,15 +55,13 @@ String getRandPass(uint32_t seed, byte nth)
     static const char map[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                '8', '9', 'A', 'B', 'C', 'D'};
 
-    int n;
     srand(seed);
     for (int i = 0; i < nth; i++)
         rand();
-    n = rand();
 
     char otp[6];
     uint8_t hash[20];
-    sha1(String(n), hash);
+    sha1(String(rand()), hash);
 
     for (int i = 0; i < 5; i++)
         otp[i] = map[hash[hash[i] % 3 + i * 3 + 5] % 14];
@@ -89,7 +87,7 @@ void checkInput()
             break;
 
     case '*':
-        Serial.println();
+        Serial.println('\\c');
         str.clear();
         break;
 
