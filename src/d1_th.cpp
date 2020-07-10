@@ -8,16 +8,22 @@
 #define LCD_ADDR 0x27
 #define LCD_COLS 20
 #define LCD_ROWS 4
-#define UPDATE_INTERVAL 30
+#define WEATHER_INTERVAL 30
+#define TIME_INTERVAL 10
 
 SimpleDHT11 dht(DHT_PIN);
 LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
-TickerScheduler tickers(2);
+Ticker weather_ticker;
+Ticker time_ticker;
 
 int scroll_counter = 0;
 
+bool update_weather = false;
+bool update_time = false;
+
 String epoch2str(uint32_t t);
-void updateFun(void *);
+void updateTime();
+void updateWeather();
 
 void setup()
 {
@@ -32,13 +38,22 @@ void setup()
     remote::connect();
     lcd.clear();
 
-    tickers.add(0, UPDATE_INTERVAL * 1000, updateFun, nullptr, true);
-    tickers.add(
-        1, 20000, [&](void *) {}, nullptr, false);
+    time_ticker.attach(TIME_INTERVAL, [&]() { update_time = true; });
+    weather_ticker.attach(WEATHER_INTERVAL, [&]() { update_weather = true; });
 }
 
 void loop()
 {
+    if (update_time)
+    {
+        updateTime();
+        update_time = false;
+    }
+    if (update_weather)
+    {
+        updateWeather();
+        update_time = false;
+    }
     // .75s * 40 + 30s = 60s
     // 300s / 60s = 5
     // delay(750);
@@ -82,19 +97,23 @@ String epoch2str(uint32_t t)
     }
     day++;
 
-    snprintf_P(buf, 20, PSTR("%d/%d/%d %d:%d:%d"),
+    snprintf_P(buf, 20, PSTR("%04d/%02d/%02d %02d:%02d:%02d"),
                year, month, day, hr, min, sec);
 
     return String(buf);
 }
 
-void updateFun(void *)
+void updateTime()
+{
+    uint32_t epoch = remote::getTime();
+}
+
+void updateWeather()
 {
     static const size_t LCD_BUF = 40;
     static char line[LCD_BUF];
     static char indoor[LCD_BUF];
 
-    uint32_t epoch = remote::getTime();
     common::weather_data data = remote::getWeatherData();
 
     byte temp, humid;
