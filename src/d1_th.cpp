@@ -68,41 +68,11 @@ void loop()
 
 tm epoch2str(uint32_t t)
 {
-    static const uint32_t SECONDS_FROM_1970_TO_2020 = 1577750400UL;
-    static const byte DAYS_IN_MONTH[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    // localtime() can convert Unix timestamp to struct tm!
 
-    tm ret;
+    tm *ret;
 
-    t -= SECONDS_FROM_1970_TO_2020;
-    ret.tm_sec = t % 60;
-    t /= 60;
-    ret.tm_min = t % 60;
-    t /= 60;
-    ret.tm_hour = t % 24;
-    int day = t / 24;
-    bool leap;
-
-    // TODO return struct tm so we can use strftime()
-
-    // for (ret.tm_year = 2020; day > 365 + leap; ret.tm_year++)
-    // {
-    //     leap = year % 4 == 0;
-    //     if (day < 365 + leap)
-    //         break;
-    //     day -= 365 + leap;
-    // }
-
-    // for (month = 1;; month++)
-    // {
-    //     uint8_t daysPerMonth = DAYS_IN_MONTH[month - 1];
-    //     if (leap && month == 2)
-    //         daysPerMonth++;
-    //     if (day < daysPerMonth)
-    //         break;
-    //     day -= daysPerMonth;
-    // }
-
-    return ret;
+    return *ret;
 }
 
 void updateTime()
