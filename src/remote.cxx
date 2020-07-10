@@ -144,7 +144,7 @@ void remote::connect()
     AP_ip = WiFi.gatewayIP();
 }
 
-uint32_t remote::getTime()
+time_t remote::getTime()
 {
     WiFiClient client;
     if (!connectAP(client))

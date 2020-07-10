@@ -19,7 +19,7 @@ namespace remote
     void begin();
     void connect();
 
-    uint32_t getTime();
+    time_t getTime();
     String getWeatherJsonStr(String psk);
     common::weather_data getWeatherData();
 

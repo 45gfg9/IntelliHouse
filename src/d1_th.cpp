@@ -10,6 +10,7 @@
 #define LCD_ROWS 4
 #define WEATHER_INTERVAL 30
 #define TIME_INTERVAL 10
+#define UTC_8HR 28800
 
 // D1 = SCL
 // D2 = SDA
@@ -41,6 +42,10 @@ void setup()
     remote::connect();
     lcd.clear();
 
+    time_t t = remote::getTime() + 1; // +1s to make up for network latency
+    timeval tv = {t + UTC_8HR, 0};
+    settimeofday(&tv, nullptr);
+
     time_ticker.attach(TIME_INTERVAL, [&]() { update_time = true; });
     weather_ticker.attach(WEATHER_INTERVAL, [&]() { update_weather = true; });
 }
@@ -66,24 +71,19 @@ void loop()
     }
 }
 
-tm epoch2str(uint32_t t)
-{
-    // localtime() can convert Unix timestamp to struct tm!
-
-    tm *ret;
-
-    return *ret;
-}
-
 void updateTime()
 {
-    // TODO
-    uint32_t epoch = remote::getTime();
+    time_t t;
+    time(&t);
+    // dynamic allocated, may cause memory leak!
+    tm *lt = localtime(&t);
 
-    tm time = epoch2str(epoch);
+    char buf[LCD_COLS];
+    strftime(buf, LCD_COLS, "%m-%d %R", lt);
 
-    char buf[41];
-    strftime(buf, 40, "%R", &time);
+    delete lt;
+
+    // tbc
 }
 
 void updateWeather()
@@ -105,4 +105,6 @@ void updateWeather()
     }
 
     snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location.c_str(), data.temperature);
+
+    // tbc
 }
