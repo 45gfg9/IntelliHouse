@@ -174,7 +174,7 @@ void updateTime()
 
 void updateWeather()
 {
-    common::weather_data data = remote::getWeatherData();
+    weather_data data = remote::getWeatherData();
     display_data.online_temp = data.temperature;
     display_data.location = data.location;
     display_data.weather = data.weather;

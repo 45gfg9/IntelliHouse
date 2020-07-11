@@ -21,7 +21,7 @@ namespace remote
 
     time_t getTime();
     String getWeatherJsonStr(String psk);
-    common::weather_data getWeatherData();
+    weather_data getWeatherData();
 
     String header(IPAddress host, String uri, String query = emptyString);
     String header(String host, String uri, String query = emptyString);

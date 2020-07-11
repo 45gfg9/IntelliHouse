@@ -12,7 +12,7 @@ static const int udpPort = 1337;
 ESP8266WebServer server(SERVER_PORT);
 WiFiUDP udp;
 
-common::weather_data fetchWeatherData();
+weather_data fetchWeatherData();
 uint32_t fetchTime();
 
 void setup()
@@ -33,7 +33,7 @@ void setup()
         String data;
         if (WiFi.getMode() == WIFI_AP_STA)
         {
-            common::weather_data weather = fetchWeatherData();
+            weather_data weather = fetchWeatherData();
             data = weather.location + ',' + weather.weather + ',' + weather.temperature;
         }
         else
@@ -50,6 +50,8 @@ void setup()
             epoch = fetchTime();
         else
             epoch = millis() / 1000;
+        // consider sending raw data?
+        // or use UDP to transmit
         server.send(200, "text/plain", String(epoch));
     });
 
@@ -68,13 +70,13 @@ void loop()
 uint32_t fetchTime()
 {
     static const size_t NTP_PACKET_SIZE = 48;
-    static const uint32_t SEVENTY_YEARS = 2208988800UL;
+    static const uint32_t SECONDS_FROM_1900_TO_1970 = 2208988800UL;
     static const uint32_t TIMEOUT = 1000;
-    static IPAddress ntpIP;
-    static byte buf[NTP_PACKET_SIZE];
 
+    IPAddress ntpIP;
     WiFi.hostByName("ntp.ntsc.ac.cn", ntpIP);
 
+    byte buf[NTP_PACKET_SIZE];
     buf[0] = 0xE3;
     buf[2] = 6;
     buf[3] = 0xEC;
@@ -104,13 +106,14 @@ uint32_t fetchTime()
                       buf[41] << 16 |
                       buf[42] << 8 |
                       buf[43]) -
-                     SEVENTY_YEARS;
+                     SECONDS_FROM_1900_TO_1970;
 
     return epoch;
 }
 
-common::weather_data fetchWeatherData()
+weather_data fetchWeatherData()
 {
+    static const size_t JSON_BUFSIZE = 512;
     static const size_t PSK_STRLEN = 18;
     static char psk[PSK_STRLEN];
 
@@ -125,9 +128,9 @@ common::weather_data fetchWeatherData()
 
     String json = remote::getWeatherJsonStr(psk);
     if (json.length() == 0)
-        return common::emptyData;
+        return emptyWeatherData;
 
-    DynamicJsonDocument doc(512);
+    DynamicJsonDocument doc(JSON_BUFSIZE);
     deserializeJson(doc, json);
 
     JsonObject result = doc["results"][0];

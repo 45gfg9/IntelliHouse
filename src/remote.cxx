@@ -173,7 +173,7 @@ String remote::getWeatherJsonStr(String psk)
     return parseContent(readResponse(client));
 }
 
-common::weather_data remote::getWeatherData()
+weather_data remote::getWeatherData()
 {
     WiFiClient client;
     if (!connectAP(client))
@@ -183,7 +183,7 @@ common::weather_data remote::getWeatherData()
     String content = parseContent(readResponse(client));
 
     if (content.length() == 0)
-        return common::emptyData;
+        return emptyWeatherData;
 
     int sep = content.indexOf(',');
     String location = content.substring(0, sep);
