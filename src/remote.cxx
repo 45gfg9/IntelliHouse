@@ -130,7 +130,7 @@ void remote::begin()
     Serial.println(WiFi.softAPIP());
 }
 
-void remote::connect()
+void remote::init()
 {
     WiFi.mode(WIFI_STA);
 
@@ -142,6 +142,10 @@ void remote::connect()
     Serial.println(WiFi.localIP());
 
     AP_ip = WiFi.gatewayIP();
+
+    time_t t = getTime(); // +1s to make up for network latency
+    timeval tv = {t + 8 * 3600 + 1, 0};
+    settimeofday(&tv, nullptr);
 }
 
 time_t remote::getTime()

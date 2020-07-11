@@ -20,7 +20,25 @@ LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
 Ticker weather_ticker;
 Ticker time_ticker;
 
-String lines[LCD_ROWS];
+/* Example display:
+    [  14:20, Yinchuan   ]
+    [I -12C 30%H / O -10C]
+    [Thunderstorm with ..]
+    [.. Hail       07/11 ]
+*/
+
+struct
+{
+    tm time;
+    String location;
+    byte in_temp;
+    byte in_humid;
+    int dht_last_err;
+    int online_temp;
+    String weather;
+} display_data;
+
+char lines[LCD_ROWS][LCD_COLS + 1]; // 1 for line terminator
 
 volatile bool update_weather = true;
 volatile bool update_time = true;
@@ -37,12 +55,8 @@ void setup()
     lcd.backlight();
     lcd.print(F("Initializing"));
 
-    remote::connect();
+    remote::init();
     lcd.clear();
-
-    time_t t = remote::getTime() + 1; // +1s to make up for network latency
-    timeval tv = {t + UTC_8HR, 0};
-    settimeofday(&tv, nullptr);
 
     time_ticker.attach(TIME_INTERVAL, [&]() { update_time = true; });
     weather_ticker.attach(WEATHER_INTERVAL, [&]() { update_weather = true; });
@@ -62,26 +76,31 @@ void loop()
     }
 
     lcd.clear();
-    for (int i = 0; i < 4; i++)
-    {
-        lcd.setCursor(0, i);
-        lcd.print(lines[i]);
-    }
+    lcd.printf_P(PSTR("  %02d:%02d %s"),
+                 display_data.time.tm_min,
+                 display_data.time.tm_sec,
+                 display_data.location);
+
+    lcd.setCursor(0, 1);
+    lcd.printf_P(PSTR("I %3dC %2d%%H / O %3dC"),
+                 display_data.in_temp,
+                 display_data.in_humid,
+                 display_data.online_temp);
+
+    lcd.setCursor(0, 2);
+    // todo
 }
 
 void updateTime()
 {
+    static const size_t BUF_LEN = 6;
+    static char buf[BUF_LEN];
     time_t t;
     time(&t);
-    // dynamic allocated (?), may cause memory leak!
+    // localtime() returns static variable address?
     tm *lt = localtime(&t);
 
-    char buf[LCD_COLS];
-    strftime(buf, LCD_COLS, "%m-%d %R", lt);
-
-    delete lt;
-
-    // tbc
+    display_data.time = *lt;
 }
 
 void updateWeather()
@@ -91,18 +110,12 @@ void updateWeather()
     static char indoor[LCD_BUF];
 
     common::weather_data data = remote::getWeatherData();
+    display_data.online_temp = data.temperature;
+    display_data.location = data.location;
+    display_data.weather = data.weather;
 
     byte temp, humid;
-    if ((dht.read(&temp, &humid, nullptr)) == SimpleDHTErrSuccess)
-    {
-        snprintf_P(indoor, LCD_BUF, PSTR("%dC %d%%H"), temp, humid);
-    }
-    else
-    {
-        strncpy_P(indoor, PSTR("Error"), LCD_BUF);
-    }
-
-    snprintf_P(line, LCD_BUF, PSTR("Indoor %s; %s %dC"), indoor, data.location.c_str(), data.temperature);
-
-    // tbc
+    display_data.dht_last_err = dht.read(&temp, &humid, nullptr);
+    display_data.in_temp = temp;
+    display_data.in_humid = humid;
 }

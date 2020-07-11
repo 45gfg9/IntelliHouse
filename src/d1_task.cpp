@@ -3,7 +3,7 @@
 
 void setup()
 {
-    remote::connect();
+    remote::init();
 }
 
 void loop()

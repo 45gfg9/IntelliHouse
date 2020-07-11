@@ -17,7 +17,7 @@ namespace remote
     extern IPAddress AP_ip;
 
     void begin();
-    void connect();
+    void init();
 
     time_t getTime();
     String getWeatherJsonStr(String psk);

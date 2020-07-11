@@ -5,9 +5,6 @@
 
 namespace common
 {
-    size_t write_uint32_t(Stream &stream, uint8_t order, uint32_t val);
-    uint32_t read_uint32_t(Stream &stream, uint8_t order);
-
     struct dht_data
     {
         byte temp;

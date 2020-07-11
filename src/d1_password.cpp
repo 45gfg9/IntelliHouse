@@ -25,7 +25,7 @@ void handleResult(bool success);
 
 void setup()
 {
-    remote::connect();
+    remote::init();
 }
 
 void loop()
