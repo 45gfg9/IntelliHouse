@@ -17,7 +17,6 @@ uint32_t fetchTime();
 
 void setup()
 {
-  delay(1000);
   Serial.begin(115200);
   Serial.println();
 

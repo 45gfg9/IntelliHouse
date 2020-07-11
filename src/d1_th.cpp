@@ -25,13 +25,11 @@ String lines[LCD_ROWS];
 volatile bool update_weather = true;
 volatile bool update_time = true;
 
-tm epoch2str(uint32_t t);
 void updateTime();
 void updateWeather();
 
 void setup()
 {
-    delay(1000);
     Serial.begin(115200);
     Serial.println();
 
@@ -75,7 +73,7 @@ void updateTime()
 {
     time_t t;
     time(&t);
-    // dynamic allocated, may cause memory leak!
+    // dynamic allocated (?), may cause memory leak!
     tm *lt = localtime(&t);
 
     char buf[LCD_COLS];
