@@ -177,7 +177,7 @@ weather_data remote::getWeatherData()
 {
     WiFiClient client;
     if (!connectAP(client))
-        return {"CF", "CF", 0};
+        return {"???", "Connection Failed :(", 0};
 
     client.print(header(AP_ip, "/weather"));
     String content = parseContent(readResponse(client));

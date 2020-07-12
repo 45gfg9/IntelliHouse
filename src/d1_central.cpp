@@ -30,17 +30,12 @@ void setup()
 
     server.on("/weather", [&]() {
         Serial.println(F("Fetching weather"));
-        String data;
+        weather_data data;
         if (WiFi.getMode() == WIFI_AP_STA)
-        {
-            weather_data weather = fetchWeatherData();
-            data = weather.location + ',' + weather.weather + ',' + weather.temperature;
-        }
+            data = fetchWeatherData();
         else
-        {
-            data = "NC,NC,0";
-        }
-        server.send(200, "text/plain", data);
+            data = {"???", "Central Offline", 0};
+        server.send(200, "text/plain", data.toString());
     });
 
     server.on("/time", [&]() {

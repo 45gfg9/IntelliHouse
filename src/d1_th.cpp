@@ -77,6 +77,7 @@ void setup()
 
 void loop()
 {
+    bool update_lcd = ft_control.flag | ft_time.flag | ft_weather.flag;
     if (ft_control.flag)
     {
         updateControl();
@@ -92,6 +93,10 @@ void loop()
         updateWeather();
         ft_weather.flag = false;
     }
+
+    if (!update_lcd)
+        // no need to update lcd
+        return;
 
     lcd.clear();
     lcd.setCursor(4, 0);
@@ -115,6 +120,7 @@ void loop()
     const String &ref = display_data.weather;
     if (ref.length() <= LCD_COLS)
     {
+        // Weather fits in one line
         lcd.print(ref);
     }
     else
@@ -137,6 +143,8 @@ void loop()
 
     lcd.setCursor(8, 3);
     lcd.printf_P(PSTR("(%s)"), display_data.location.c_str());
+
+    update_lcd = false;
 }
 
 void updateControl()
@@ -149,26 +157,30 @@ void updateControl()
                      WTH = 28;
 
     float temp, humid;
-    display_data.dht_last_err = dht.read2(&temp, &humid, nullptr);
+    int err = dht.read2(&temp, &humid, nullptr);
+    display_data.dht_last_err = err & 0xFF;
     display_data.in_temp = (int)temp;
     display_data.in_humid = (int)humid;
 
-    // summer is from May to Oct
-    // other months are winter
+    // summer is from May to Oct, other months are winter
     bool is_summer = ((display_data.time.tm_mon + 1) % 12 / 6);
 
-    digitalWrite(FAN_PIN, (temp > (is_summer ? STH : WTH)));
-    digitalWrite(HEAT_PIN, (temp < (is_summer ? STL : WTL)));
-    digitalWrite(HUMID_PIN, (humid < (is_summer ? SHL : WHL)));
+    bool dht_success = err == SimpleDHTErrSuccess;
+    if (!dht_success)
+        Serial.printf_P(PSTR("DHT read error %x\r\n"), err);
+
+    // read success is first condition
+    digitalWrite(FAN_PIN, dht_success & (temp > (is_summer ? STH : WTH)));
+    digitalWrite(HEAT_PIN, dht_success & (temp < (is_summer ? STL : WTL)));
+    digitalWrite(HUMID_PIN, dht_success & (humid < (is_summer ? SHL : WHL)));
 }
 
 void updateTime()
 {
     time_t t;
     time(&t);
-    // localtime() returns static variable address?
+    // localtime() returns static variable address
     tm *lt = localtime(&t);
-
     display_data.time = *lt;
 }
 

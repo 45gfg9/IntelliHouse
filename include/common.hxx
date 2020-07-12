@@ -8,8 +8,13 @@ struct weather_data
     String location;
     String weather;
     int temperature;
+
+    String toString()
+    {
+        return location + ',' + weather + ',' + temperature;
+    }
 };
 
-const weather_data emptyWeatherData = {"Unknown", "Unknown", 0};
+const weather_data emptyWeatherData = {"Unknown", "Empty Data :(", 0};
 
 #endif // __SH_COMMON_H__
