@@ -67,7 +67,7 @@ void setup()
     lcd.backlight();
     lcd.print(F("Initializing"));
 
-    remote::init();
+    remote::connect();
     lcd.clear();
 
     ft_control.ticker.attach(CONTROL_INTERVAL, [&]() { ft_control.flag = true; });
@@ -158,7 +158,7 @@ void updateControl()
 
     float temp, humid;
     int err = dht.read2(&temp, &humid, nullptr);
-    display_data.dht_last_err = err & 0xFF;
+    display_data.dht_last_err = err > 0xFF ? err >> 8 : err;
     display_data.in_temp = (int)temp;
     display_data.in_humid = (int)humid;
 

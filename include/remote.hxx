@@ -17,8 +17,12 @@ namespace remote
     extern IPAddress AP_ip;
 
     void begin();
-    void init();
+    void connect();
 
+    // TODO U. D. P. Broadcast.
+    bool setTime();
+
+    __attribute__((deprecated))
     time_t getTime();
     String getWeatherJsonStr(String psk);
     weather_data getWeatherData();
