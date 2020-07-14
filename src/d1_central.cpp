@@ -73,12 +73,12 @@ uint32_t fetchTime()
 
     byte buf[NTP_PACKET_SIZE];
     buf[0] = 0xE3;
-    buf[2] = 6;
+    buf[2] = 0x06;
     buf[3] = 0xEC;
-    buf[12] = 49;
+    buf[12] = 0x31;
     buf[13] = 0x4E;
-    buf[14] = 49;
-    buf[15] = 52;
+    buf[14] = 0x31;
+    buf[15] = 0x34;
 
     Serial.println(F("Sending NTP packet"));
     udp.beginPacket(ntpIP, 123);
