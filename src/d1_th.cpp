@@ -17,6 +17,8 @@
 #define TIME_INTERVAL 60
 #define WEATHER_INTERVAL 300
 
+WiFiUDP udp;
+
 // D1 = SCL, D2 = SDA
 
 SimpleDHT11 dht(DHT_PIN);
@@ -64,13 +66,19 @@ void setup()
     remote::connect();
     lcd.clear();
 
+    udp.begin(UDP_PORT);
+
     ft_control.begin(CONTROL_INTERVAL);
     ft_time.begin(TIME_INTERVAL);
     ft_weather.begin(WEATHER_INTERVAL);
+
+    remote::getBroadcastIP(WiFi.gatewayIP(), WiFi.subnetMask());
 }
 
 void loop()
 {
+    remote::listenTime(udp);
+
     bool update_lcd = ft_control | ft_time | ft_weather;
     if (ft_control)
     {

@@ -1,7 +1,5 @@
 #include "remote.hxx"
 
-IPAddress remote::AP_ip;
-
 static void gen(int pin, int delay1, int delay2)
 {
     digitalWrite(pin, HIGH);
@@ -46,69 +44,6 @@ static void connectBlocking(const char *ssid, const char *pass)
     }
 }
 
-static bool connect(WiFiClient &client, const IPAddress &host, int port)
-{
-    if (!client.connect(host, port))
-    {
-        Serial.print(F("Failed to connect to "));
-        Serial.println(host);
-        return false;
-    }
-    Serial.print(F("Establishing connection to "));
-    Serial.print(host);
-    while (!client.connected())
-    {
-        Serial.print('.');
-        delay(200);
-    }
-    Serial.println(F(". Established!"));
-    return true;
-}
-
-static bool connect(WiFiClient &client, const char *host, int port)
-{
-    IPAddress addr;
-    if (!WiFi.hostByName(host, addr))
-        return false;
-    return connect(client, addr, port);
-}
-
-static bool connect(WiFiClient &client, String host, int port)
-{
-    return connect(client, host.c_str(), port);
-}
-
-static bool connectAP(WiFiClient &client)
-{
-    return connect(client, remote::AP_ip, SERVER_PORT);
-}
-
-static String readResponse(WiFiClient &client, unsigned long loadTime = 500, unsigned long timeout = 10000)
-{
-    unsigned long start = millis();
-    while (client.available() == 0)
-    {
-        if (millis() - start > timeout)
-        {
-            Serial.println("Connection timeout");
-            return emptyString;
-        }
-    }
-    Serial.println(F("Receiving"));
-    delay(loadTime);
-
-    return client.readString();
-}
-
-static String parseContent(String content)
-{
-    if (content.length() == 0)
-        return content;
-    int idx = content.indexOf("\r\n\r\n");
-
-    return content.substring(idx + 4);
-}
-
 void remote::begin()
 {
     if (EX_SSID != nullptr)
@@ -132,12 +67,64 @@ void remote::begin()
 
 void remote::connect()
 {
+    WiFi.mode(WIFI_STA);
+    connectBlocking(AP_SSID, AP_PASS);
+
+    Serial.print(F("Gateway IP: "));
+    Serial.println(WiFi.gatewayIP());
+    Serial.print(F("Local IP: "));
+    Serial.println(WiFi.localIP());
 }
 
-bool remote::setTime()
+void remote::listenTime(UDP &udp)
 {
+    if (udp.parsePacket())
+    {
+        time_t t = 0;
+        for (size_t i = 0; i < sizeof(time_t); i++)
+            t |= udp.read() << 8 * i;
+
+        timeval tv = {t + 8 * 3600, 0};
+        settimeofday(&tv, nullptr);
+    }
+}
+
+IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask) {
+    IPAddress ret;
+    for (int i = 0; i < 4; i++)
+        ret[i] = (ip[i] & mask[i]) | ~mask[i];
+
+    return ret;
 }
 
 weather_data remote::getWeatherData()
 {
+    WiFiClient client;
+
+    if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
+        return {"Error", "Connection Failed :(", 0};
+
+    while (!client.connected())
+    {
+        Serial.print('.');
+        delay(200);
+    }
+    Serial.println();
+    delay(500);
+
+    Serial.println(client.available());
+
+    int locl = client.read();
+    byte loc[locl + 1];
+    client.read(loc, locl);
+    loc[locl] = 0;
+    int wthl = client.read();
+    byte wth[wthl + 1];
+    client.read(wth, wthl);
+    wth[wthl] = 0;
+    int tmp = client.read();
+
+    client.stop();
+
+    return {(char *)loc, (char *)wth, tmp};
 }

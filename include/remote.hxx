@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 #include "common.hxx"
 
 #define SERVER_PORT 80
@@ -15,12 +16,12 @@
 // namespace necessity?
 namespace remote
 {
-    extern IPAddress AP_ip;
-
     void begin();
     void connect();
 
-    bool setTime();
+    void listenTime(UDP &udp);
+
+    IPAddress getBroadcastIP(const IPAddress &ip, const IPAddress &mask);
 
     weather_data getWeatherData();
 } // namespace remote

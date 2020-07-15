@@ -2,16 +2,19 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <WiFiServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
+#include <FlagTicker.h>
 #include "remote.hxx"
+
+#define TIME_INTERVAL 3600
 
 WiFiServer server(TCP_PORT);
 WiFiUDP udp;
+FlagTicker ft_time;
 
 weather_data fetchWeatherData();
-uint32_t fetchTime();
+time_t fetchTime();
 
 void setup()
 {
@@ -20,17 +23,52 @@ void setup()
 
     remote::begin();
 
-    server.setNoDelay(true);
+    // server.setNoDelay(true);
 
     udp.begin(UDP_PORT);
     server.begin();
+
+    ft_time.begin(TIME_INTERVAL);
 }
 
 void loop()
 {
+    if (ft_time)
+    {
+        const size_t size = sizeof(time_t);
+        byte buf[size];
+
+        time_t t = fetchTime();
+        timeval tv = {t, 0};
+        settimeofday(&tv, nullptr);
+
+        for (size_t i = 0; i < size; i++)
+            buf[i] = t >> 8 * i;
+
+        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), IPAddress(255, 255, 255, 0)), UDP_PORT);
+        udp.write(buf, 4);
+        udp.endPacket();
+
+        ft_time.done();
+    }
+
+    if (server.hasClient())
+    {
+        WiFiClient client = server.available();
+        weather_data data = fetchWeatherData();
+
+        client.write(data.location.length());
+        client.print(data.location);
+        client.write(data.weather.length());
+        client.print(data.location);
+        client.write(data.temperature);
+
+        delay(500);
+        client.stop();
+    }
 }
 
-uint32_t fetchTime()
+time_t fetchTime()
 {
     static const size_t NTP_PACKET_SIZE = 48;
     static const uint32_t SECONDS_FROM_1900_TO_1970 = 2208988800UL;
@@ -48,7 +86,6 @@ uint32_t fetchTime()
     buf[14] = 0x31;
     buf[15] = 0x34;
 
-    Serial.println(F("Sending UDP packet"));
     udp.beginPacket(ntpIP, 123);
     udp.write(buf, NTP_PACKET_SIZE);
     udp.endPacket();
@@ -58,18 +95,17 @@ uint32_t fetchTime()
     {
         if (millis() - start >= TIMEOUT)
         {
-            Serial.println(F("Timeout waiting for UDP response"));
+            Serial.println(F("UDP Timeout"));
             return 0;
         }
     }
-    Serial.println(F("Receiving packet"));
     udp.read(buf, NTP_PACKET_SIZE);
 
-    uint32_t epoch = (buf[40] << 24 |
-                      buf[41] << 16 |
-                      buf[42] << 8 |
-                      buf[43]) -
-                     SECONDS_FROM_1900_TO_1970;
+    time_t epoch = (buf[40] << 24 |
+                    buf[41] << 16 |
+                    buf[42] << 8 |
+                    buf[43]) -
+                   SECONDS_FROM_1900_TO_1970;
 
     return epoch;
 }
@@ -89,18 +125,26 @@ weather_data fetchWeatherData()
         Serial.println(psk);
     }
 
+    WiFiClient client;
     HTTPClient http;
 
-    if (!http.begin(String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
+    if (!http.begin(client, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
         return {"Error", "Unable to Connect :(", 0};
 
     int code = http.GET();
     if (code == 0)
+    {
+        http.end();
         return {"Error", "HTTP GET Failed :(", 0};
+    }
     if (code != HTTP_CODE_OK)
+    {
+        http.end();
         return {"Error", String(F("HTTP Code ")) + code, 0};
+    }
 
     String json = http.getString();
+    http.end();
 
     DynamicJsonDocument doc(JSON_BUFSIZE);
     deserializeJson(doc, json);
