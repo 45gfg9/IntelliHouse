@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SimpleDHT.h>
 #include <LiquidCrystal_I2C.h>
-#include <TickerScheduler.h>
+#include <FlagTicker.h>
 #include "remote.hxx"
 
 #define DHT_PIN D0
@@ -28,12 +28,6 @@ LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
   [Thundershower with  ]
   [ Hail   (Yinchuan)  ]
 */
-
-struct FlagTicker
-{
-    Ticker ticker;
-    volatile bool flag = true;
-};
 
 FlagTicker ft_control;
 FlagTicker ft_time;
@@ -70,28 +64,28 @@ void setup()
     remote::connect();
     lcd.clear();
 
-    ft_control.ticker.attach(CONTROL_INTERVAL, [&]() { ft_control.flag = true; });
-    ft_time.ticker.attach(TIME_INTERVAL, [&]() { ft_time.flag = true; });
-    ft_weather.ticker.attach(WEATHER_INTERVAL, [&]() { ft_weather.flag = true; });
+    ft_control.begin(CONTROL_INTERVAL);
+    ft_time.begin(TIME_INTERVAL);
+    ft_weather.begin(WEATHER_INTERVAL);
 }
 
 void loop()
 {
-    bool update_lcd = ft_control.flag | ft_time.flag | ft_weather.flag;
-    if (ft_control.flag)
+    bool update_lcd = ft_control | ft_time | ft_weather;
+    if (ft_control)
     {
         updateControl();
-        ft_control.flag = false;
+        ft_control.done();
     }
-    if (ft_time.flag)
+    if (ft_time)
     {
         updateTime();
-        ft_time.flag = false;
+        ft_time.done();
     }
-    if (ft_weather.flag)
+    if (ft_weather)
     {
         updateWeather();
-        ft_weather.flag = false;
+        ft_weather.done();
     }
 
     if (!update_lcd)
