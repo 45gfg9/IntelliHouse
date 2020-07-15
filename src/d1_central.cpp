@@ -8,8 +8,6 @@
 #include <ArduinoJson.h>
 #include "remote.hxx"
 
-static const int udpPort = 1337;
-
 ESP8266WebServer server(SERVER_PORT);
 WiFiUDP udp;
 
@@ -22,7 +20,7 @@ void setup()
     Serial.println();
 
     remote::begin();
-    udp.begin(udpPort);
+    udp.begin(UDP_PORT);
 
     server.on("/", [&]() {
         Serial.println(F("Pong!"));
