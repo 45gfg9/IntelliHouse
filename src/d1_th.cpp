@@ -93,6 +93,8 @@ void loop()
         return;
 
     lcd.clear();
+
+    // Line 0 (Date & Time)
     lcd.setCursor(4, 0);
     lcd.printf_P(PSTR("%02d-%02d"),
                  display_data.time.tm_mon,
@@ -102,6 +104,7 @@ void loop()
                  display_data.time.tm_hour,
                  display_data.time.tm_min);
 
+    // Line 1 (Environment & Local temperature)
     lcd.setCursor(0, 1);
     lcd.print(F("I "));
     if (display_data.dht_last_err == SimpleDHTErrSuccess)
@@ -110,6 +113,7 @@ void loop()
         lcd.printf_P(PSTR("Err! 0x%02X"), display_data.dht_last_err);
     lcd.printf_P(PSTR(" / O %3dC"), display_data.online_temp);
 
+    // Line 2 & 3 (Weather information & Location)
     lcd.setCursor(0, 2);
     const String &ref = display_data.weather;
     if (ref.length() <= LCD_COLS)
