@@ -1,14 +1,13 @@
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <Wire.h>
 #include <ESP8266WiFi.h>
-// WiFiClient.h does TCP conn
-#include <ESP8266WebServer.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 #include "remote.hxx"
 
-ESP8266WebServer server(SERVER_PORT);
+WiFiServer server(TCP_PORT);
 WiFiUDP udp;
 
 weather_data fetchWeatherData();
@@ -20,45 +19,15 @@ void setup()
     Serial.println();
 
     remote::begin();
+
+    server.setNoDelay(true);
+
     udp.begin(UDP_PORT);
-
-    server.on("/", [&]() {
-        Serial.println(F("Pong!"));
-        server.send_P(200, "text/plain", PSTR("Pong!"));
-    });
-
-    server.on("/weather", [&]() {
-        Serial.println(F("Fetching weather"));
-        weather_data data;
-        if (WiFi.getMode() == WIFI_AP_STA)
-            data = fetchWeatherData();
-        else
-            data = {"???", "Central Offline", 0};
-        server.send(200, "text/plain", data.toString());
-    });
-
-    server.on("/time", [&]() {
-        Serial.println(F("Fetching time"));
-        uint32_t epoch;
-        if (WiFi.getMode() == WIFI_AP_STA)
-            epoch = fetchTime();
-        else
-            epoch = millis() / 1000;
-        // consider sending raw data?
-        // or use UDP to transmit
-        server.send(200, "text/plain", String(epoch));
-    });
-
-    server.onNotFound([&]() {
-        server.send_P(404, "text/plain", PSTR("Where are you looking at?!"));
-    });
-
     server.begin();
 }
 
 void loop()
 {
-    server.handleClient(); // non-blocking
 }
 
 uint32_t fetchTime()
@@ -79,7 +48,7 @@ uint32_t fetchTime()
     buf[14] = 0x31;
     buf[15] = 0x34;
 
-    Serial.println(F("Sending NTP packet"));
+    Serial.println(F("Sending UDP packet"));
     udp.beginPacket(ntpIP, 123);
     udp.write(buf, NTP_PACKET_SIZE);
     udp.endPacket();
@@ -120,9 +89,18 @@ weather_data fetchWeatherData()
         Serial.println(psk);
     }
 
-    String json = remote::getWeatherJsonStr(psk);
-    if (json.length() == 0)
-        return emptyWeatherData;
+    HTTPClient http;
+
+    if (!http.begin(String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
+        return {"Error", "Unable to Connect :(", 0};
+
+    int code = http.GET();
+    if (code == 0)
+        return {"Error", "HTTP GET Failed :(", 0};
+    if (code != HTTP_CODE_OK)
+        return {"Error", String(F("HTTP Code ")) + code, 0};
+
+    String json = http.getString();
 
     DynamicJsonDocument doc(JSON_BUFSIZE);
     deserializeJson(doc, json);

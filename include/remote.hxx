@@ -12,6 +12,7 @@
 #define AP_SSID "SH_FFF"
 #define AP_PASS "nullptr!"
 
+// namespace necessity?
 namespace remote
 {
     extern IPAddress AP_ip;
@@ -19,16 +20,9 @@ namespace remote
     void begin();
     void connect();
 
-    // TODO U. D. P. Broadcast.
     bool setTime();
 
-    __attribute__((deprecated))
-    time_t getTime();
-    String getWeatherJsonStr(String psk);
     weather_data getWeatherData();
-
-    String header(IPAddress host, String uri, String query = emptyString);
-    String header(String host, String uri, String query = emptyString);
 } // namespace remote
 
 #endif // __SH_REMOTE_H__

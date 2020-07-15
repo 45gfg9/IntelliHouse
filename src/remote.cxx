@@ -132,84 +132,12 @@ void remote::begin()
 
 void remote::connect()
 {
-    WiFi.mode(WIFI_STA);
-
-    connectBlocking(AP_SSID, AP_PASS);
-
-    Serial.print(F("Gateway IP: "));
-    Serial.println(WiFi.gatewayIP());
-    Serial.print(F("Local IP: "));
-    Serial.println(WiFi.localIP());
-
-    AP_ip = WiFi.gatewayIP();
 }
 
 bool remote::setTime()
 {
-    time_t epoch = getTime();
-
-    if (epoch == 0)
-        return false;
-    timeval tv = {epoch + 8 * 3600 + 1, 0};
-    settimeofday(&tv, nullptr);
-
-    return true;
-}
-
-time_t remote::getTime()
-{
-    WiFiClient client;
-    if (!connectAP(client))
-        return 0;
-    client.print(header(AP_ip, "/time"));
-    String content = parseContent(readResponse(client));
-
-    return content.toInt();
-}
-
-String remote::getWeatherJsonStr(String psk)
-{
-    static const String host(F("api.seniverse.com"));
-    static const String uri(F("/v3/weather/now.json"));
-    static const String partialQuery(F("?language=en&location=ip&key="));
-
-    WiFiClient client;
-    if (!connect(client, host, 80))
-        return emptyString;
-    Serial.println(F("Posting headers"));
-    client.print(header(host, uri, partialQuery + psk));
-    return parseContent(readResponse(client));
 }
 
 weather_data remote::getWeatherData()
 {
-    WiFiClient client;
-    if (!connectAP(client))
-        return {"???", "Connection Failed :(", 0};
-
-    client.print(header(AP_ip, "/weather"));
-    String content = parseContent(readResponse(client));
-
-    if (content.length() == 0)
-        return emptyWeatherData;
-
-    int sep = content.indexOf(',');
-    String location = content.substring(0, sep);
-    content = content.substring(sep + 1);
-
-    sep = content.indexOf(',');
-    String weather = content.substring(0, sep);
-    byte temp = content.substring(sep + 1).toInt();
-
-    return {location, weather, temp};
-}
-
-String remote::header(IPAddress host, String uri, String query)
-{
-    return header(host.toString(), uri, query);
-}
-
-String remote::header(String host, String uri, String query)
-{
-    return String(F("GET ")) + uri + query + F(" HTTP/1.1\r\nHost: ") + host + F("\r\nConnection: close\r\n\r\n");
 }
