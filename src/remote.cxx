@@ -80,9 +80,15 @@ void remote::listenTime(UDP &udp)
 {
     if (udp.parsePacket())
     {
+        Serial.println("Receiving UDP packet");
         time_t t = 0;
         for (size_t i = 0; i < sizeof(time_t); i++)
             t |= udp.read() << 8 * i;
+        if (t == 0)
+        {
+            Serial.println(F("Invalid Time 0"));
+            return;
+        }
 
         timeval tv = {t + 8 * 3600, 0};
         settimeofday(&tv, nullptr);
@@ -100,14 +106,12 @@ IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask)
 
 weather_data remote::getWeatherData()
 {
-    if (WiFi.getMode() == WIFI_AP)
-        return {"Error", "Not Connected :(", 0};
-
     WiFiClient client;
 
     if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
         return {"Error", "Connection Failed :(", 0};
 
+    Serial.print("Connecting to Gateway");
     while (!client.connected())
     {
         Serial.print('.');

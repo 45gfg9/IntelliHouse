@@ -13,9 +13,9 @@
 #define LCD_COLS 20
 #define LCD_ROWS 4
 
-#define CONTROL_INTERVAL 10
-#define TIME_INTERVAL 60
-#define WEATHER_INTERVAL 300
+#define CONTROL_INTERVAL 5
+#define TIME_INTERVAL 30
+#define WEATHER_INTERVAL 60
 
 WiFiUDP udp;
 
@@ -42,7 +42,7 @@ struct
     int in_temp;
     int in_humid;
     int dht_last_err;
-    int online_temp;
+    int local_temp;
     String weather;
 } display_data;
 
@@ -62,9 +62,12 @@ void setup()
     lcd.init();
     lcd.backlight();
     lcd.print(F("Initializing"));
+    lcd.setCursor(0, 1);
+    lcd.print(F("Phase 1 / 2"));
 
     remote::connect();
-    lcd.clear();
+    lcd.setCursor(6, 1);
+    lcd.print('2');
 
     udp.begin(UDP_PORT);
 
@@ -103,7 +106,7 @@ void loop()
     // Line 0 (Date & Time)
     lcd.setCursor(4, 0);
     lcd.printf_P(PSTR("%02d-%02d"),
-                 display_data.time.tm_mon,
+                 display_data.time.tm_mon + 1,
                  display_data.time.tm_mday);
     lcd.setCursor(11, 0);
     lcd.printf_P(PSTR("%02d:%02d"),
@@ -117,7 +120,7 @@ void loop()
         lcd.printf_P(PSTR("%3dC %2d%%H"), display_data.in_temp, display_data.in_humid);
     else
         lcd.printf_P(PSTR("Err! 0x%02X"), display_data.dht_last_err);
-    lcd.printf_P(PSTR(" / O %3dC"), display_data.online_temp);
+    lcd.printf_P(PSTR(" / O %3dC"), display_data.local_temp);
 
     // Line 2 & 3 (Weather information & Location)
     lcd.setCursor(0, 2);
@@ -162,16 +165,16 @@ void updateControl()
 
     float temp, humid;
     int err = dht.read2(&temp, &humid, nullptr);
-    display_data.dht_last_err = err > 0xFF ? err >> 8 : err;
+    display_data.dht_last_err = (byte) err;
     display_data.in_temp = (int)temp;
     display_data.in_humid = (int)humid;
 
     // summer is from May to Oct, other months are winter
     bool is_summer = ((display_data.time.tm_mon + 1) % 12 / 6);
 
-    bool dht_success = err == SimpleDHTErrSuccess;
+    bool dht_success = (err == SimpleDHTErrSuccess);
     if (!dht_success)
-        Serial.printf_P(PSTR("DHT read error %x\r\n"), err);
+        Serial.printf_P(PSTR("DHT read error 0x%x\r\n"), err);
 
     // read success is first condition
     digitalWrite(FAN_PIN, dht_success & (temp > (is_summer ? STH : WTH)));
@@ -184,14 +187,13 @@ void updateTime()
     time_t t;
     time(&t);
     // localtime() returns static variable address
-    tm *lt = localtime(&t);
-    display_data.time = *lt;
+    display_data.time = *localtime(&t);
 }
 
 void updateWeather()
 {
     weather_data data = remote::getWeatherData();
-    display_data.online_temp = data.temperature;
+    display_data.local_temp = data.temperature;
     display_data.location = data.location;
     display_data.weather = data.weather;
 }

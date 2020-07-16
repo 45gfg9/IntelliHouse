@@ -7,7 +7,7 @@
 #include <FlagTicker.h>
 #include "remote.hxx"
 
-#define TIME_INTERVAL 3600
+#define TIME_INTERVAL 60
 
 WiFiServer server(TCP_PORT);
 WiFiUDP udp;
@@ -23,7 +23,7 @@ void setup()
 
     remote::begin();
 
-    // server.setNoDelay(true);
+    server.setNoDelay(true);
 
     udp.begin(UDP_PORT);
     server.begin();
@@ -35,6 +35,7 @@ void loop()
 {
     if (ft_time)
     {
+        Serial.println("Sending UDP packet");
         const size_t size = sizeof(time_t);
         byte buf[size];
 
@@ -54,16 +55,19 @@ void loop()
 
     if (server.hasClient())
     {
+        Serial.print("TCP handling.. ");
+        size_t sent = 0;
         WiFiClient client = server.available();
         weather_data data = fetchWeatherData();
 
-        client.write(data.location.length());
-        client.print(data.location);
-        client.write(data.weather.length());
-        client.print(data.location);
-        client.write(data.temperature);
+        sent += client.write(data.location.length());
+        sent += client.print(data.location);
+        sent += client.write(data.weather.length());
+        sent += client.print(data.weather);
+        sent += client.write(data.temperature);
 
         delay(500);
+        Serial.printf_P(PSTR("%d bytes sent\r\nClosing Client\r\n"), sent);
         client.stop();
     }
 }
@@ -116,13 +120,15 @@ weather_data fetchWeatherData()
     static const size_t PSK_STRLEN = 18;
     static char psk[PSK_STRLEN];
 
+    if (WiFi.getMode() == WIFI_AP)
+        return {"Error", "Not Connected :(", 0};
+
     if (*psk == 0)
     {
         EEPROM.begin(PSK_STRLEN);
         for (size_t i = 0; i < PSK_STRLEN; i++)
             psk[i] = EEPROM.read(i);
         EEPROM.end();
-        Serial.println(psk);
     }
 
     WiFiClient client;
