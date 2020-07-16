@@ -71,8 +71,6 @@ void setup()
     ft_control.begin(CONTROL_INTERVAL);
     ft_time.begin(TIME_INTERVAL);
     ft_weather.begin(WEATHER_INTERVAL);
-
-    remote::getBroadcastIP(WiFi.gatewayIP(), WiFi.subnetMask());
 }
 
 void loop()

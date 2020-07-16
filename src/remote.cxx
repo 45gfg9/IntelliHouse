@@ -89,7 +89,8 @@ void remote::listenTime(UDP &udp)
     }
 }
 
-IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask) {
+IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask)
+{
     IPAddress ret;
     for (int i = 0; i < 4; i++)
         ret[i] = (ip[i] & mask[i]) | ~mask[i];
@@ -99,6 +100,9 @@ IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask) {
 
 weather_data remote::getWeatherData()
 {
+    if (WiFi.getMode() == WIFI_AP)
+        return {"Error", "Not Connected :(", 0};
+
     WiFiClient client;
 
     if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
