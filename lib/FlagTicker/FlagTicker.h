@@ -12,6 +12,7 @@ public:
     FlagTicker();
 
     void begin(float s);
+    void begin_ms(uint32_t ms);
     void stop();
     void done();
 

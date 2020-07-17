@@ -3,7 +3,7 @@
 #include "remote.hxx"
 #include <Keypad.h>
 
-static const byte MAX_PASS_PER_MIN = 8;
+const byte MAX_PASS_PER_MIN = 8;
 
 char keymap[4][4] = {
     {'1', '2', '3', 'A'},

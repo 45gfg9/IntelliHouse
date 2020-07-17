@@ -9,6 +9,9 @@
 
 #define TIME_INTERVAL 60
 
+const IPAddress gatewayIP(192, 168, 45, 1);
+const IPAddress subnetMask(255, 255, 255, 0);
+
 WiFiServer server(TCP_PORT);
 WiFiUDP udp;
 FlagTicker ft_time;
@@ -21,6 +24,7 @@ void setup()
     Serial.begin(115200);
     Serial.println();
 
+    WiFi.softAPConfig(gatewayIP, gatewayIP, subnetMask);
     remote::begin();
 
     server.setNoDelay(true);
@@ -35,7 +39,7 @@ void loop()
 {
     if (ft_time)
     {
-        Serial.println("Sending UDP packet");
+        Serial.println(F("Sending UDP packet"));
         const size_t size = sizeof(time_t);
         byte buf[size];
 
@@ -46,7 +50,7 @@ void loop()
         for (size_t i = 0; i < size; i++)
             buf[i] = t >> 8 * i;
 
-        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), IPAddress(255, 255, 255, 0)), UDP_PORT);
+        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), subnetMask), UDP_PORT);
         udp.write(buf, 4);
         udp.endPacket();
 
@@ -55,7 +59,7 @@ void loop()
 
     if (server.hasClient())
     {
-        Serial.print("TCP handling.. ");
+        Serial.print(F("TCP handling.. "));
         size_t sent = 0;
         WiFiClient client = server.available();
         weather_data data = fetchWeatherData();
@@ -67,7 +71,7 @@ void loop()
         sent += client.write(data.temperature);
 
         delay(500);
-        Serial.printf_P(PSTR("%d bytes sent\r\nClosing Client\r\n"), sent);
+        Serial.printf_P(PSTR("%d bytes sent\r\n"), sent);
         client.stop();
     }
 }
@@ -135,18 +139,18 @@ weather_data fetchWeatherData()
     HTTPClient http;
 
     if (!http.begin(client, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
-        return {"Error", "Unable to Connect :(", 0};
+        return {F("Error"), F("Unable to Connect :("), 0};
 
     int code = http.GET();
     if (code == 0)
     {
         http.end();
-        return {"Error", "HTTP GET Failed :(", 0};
+        return {F("Error"), F("HTTP GET Failed :("), 0};
     }
     if (code != HTTP_CODE_OK)
     {
         http.end();
-        return {"Error", String(F("HTTP Code ")) + code, 0};
+        return {F("Error"), String(F("HTTP Code ")) + code, 0};
     }
 
     String json = http.getString();
