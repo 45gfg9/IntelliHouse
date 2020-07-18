@@ -6,8 +6,6 @@
 #include <WiFiUdp.h>
 #include "common.hxx"
 
-#define SERVER_PORT 80
-
 #define EX_SSID nullptr
 #define EX_PASS nullptr
 #define AP_SSID "SH_FFF"

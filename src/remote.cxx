@@ -90,7 +90,7 @@ void remote::listenTime(UDP &udp)
             return;
         }
 
-        timeval tv = {t + 8 * 3600, 0};
+        timeval tv = {t, 0};
         settimeofday(&tv, nullptr);
     }
 }

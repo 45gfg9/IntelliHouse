@@ -43,7 +43,7 @@ void loop()
         const size_t size = sizeof(time_t);
         byte buf[size];
 
-        time_t t = fetchTime();
+        time_t t = fetchTime() + 8 * 3600; // UTC+8
         timeval tv = {t, 0};
         settimeofday(&tv, nullptr);
 
