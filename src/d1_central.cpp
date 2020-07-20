@@ -125,7 +125,7 @@ weather_data fetchWeatherData()
     static char psk[PSK_STRLEN];
 
     if (WiFi.getMode() == WIFI_AP)
-        return {"Error", "Not Connected :(", 0};
+        return {F("Error"), F("Not Connected :("), 0};
 
     if (*psk == 0)
     {
