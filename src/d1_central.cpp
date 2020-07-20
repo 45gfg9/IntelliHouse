@@ -2,6 +2,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 #include <FlagTicker.h>
@@ -12,7 +13,8 @@
 const IPAddress gatewayIP(192, 168, 45, 1);
 const IPAddress subnetMask(255, 255, 255, 0);
 
-WiFiServer server(TCP_PORT);
+ESP8266WebServer server; // default port 80
+WiFiServer tcp(TCP_PORT);
 WiFiUDP udp;
 FlagTicker ft_time;
 
@@ -27,12 +29,19 @@ void setup()
     WiFi.softAPConfig(gatewayIP, gatewayIP, subnetMask);
     remote::begin();
 
-    server.setNoDelay(true);
-
+    tcp.setNoDelay(true);
+    tcp.begin();
     udp.begin(UDP_PORT);
-    server.begin();
 
     ft_time.begin(TIME_INTERVAL);
+
+    server.on("/", [&]() {
+        server.send(200, "text/plain", F("TODO"));
+    });
+
+    server.on("/task", [&]() {
+        server.send(200, "text/plain", F("TODO"));
+    });
 }
 
 void loop()
@@ -57,11 +66,11 @@ void loop()
         ft_time.done();
     }
 
-    if (server.hasClient())
+    if (tcp.hasClient())
     {
         Serial.print(F("TCP handling.. "));
         size_t sent = 0;
-        WiFiClient client = server.available();
+        WiFiClient client = tcp.available();
         weather_data data = fetchWeatherData();
 
         sent += client.write(data.location.length());
@@ -80,19 +89,14 @@ time_t fetchTime()
 {
     static const size_t NTP_PACKET_SIZE = 48;
     static const uint32_t SECONDS_FROM_1900_TO_1970 = 2208988800UL;
-    static const uint32_t TIMEOUT = 1000;
+    static const uint32_t TIMEOUT = 200;
 
     IPAddress ntpIP;
     WiFi.hostByName("ntp.ntsc.ac.cn", ntpIP);
 
     byte buf[NTP_PACKET_SIZE];
+    memset(buf, 0, NTP_PACKET_SIZE);
     buf[0] = 0xE3;
-    buf[2] = 0x06;
-    buf[3] = 0xEC;
-    buf[12] = 0x31;
-    buf[13] = 0x4E;
-    buf[14] = 0x31;
-    buf[15] = 0x34;
 
     udp.beginPacket(ntpIP, 123);
     udp.write(buf, NTP_PACKET_SIZE);
@@ -135,10 +139,10 @@ weather_data fetchWeatherData()
         EEPROM.end();
     }
 
-    WiFiClient client;
+    WiFiClient wc;
     HTTPClient http;
 
-    if (!http.begin(client, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
+    if (!http.begin(wc, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
         return {F("Error"), F("Unable to Connect :("), 0};
 
     int code = http.GET();

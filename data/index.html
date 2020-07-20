@@ -1,0 +1,22 @@
+<title>Task Manager</title>
+<script></script>
+<style></style>
+<form action="/addTask" method="POST">
+    <label for="task">Task</label>
+    <select name="task" id="task">
+        <option value="a">Option A</option>
+        <option value="b">Option B</option>
+        <option value="c">Option C</option>
+        <option value="d">Option D</option>
+    </select>
+    <br>
+    <label for="date">Date</label>
+    <input type="date" name="date" id="date">
+    <label for="time">Time</label>
+    <input type="time" name="time" id="time">
+    <br>
+    <label for="remark">Remark</label>
+    <input type="text" name="remark" id="remark">
+    <br>
+    <button type="submit">Submit</button>
+</form>

@@ -1,5 +1,4 @@
-#ifndef __SH_COMMON_H__
-#define __SH_COMMON_H__
+#pragma once
 
 #include <Arduino.h>
 
@@ -14,5 +13,3 @@ struct weather_data
         return location + ',' + weather + ',' + temperature;
     }
 };
-
-#endif // __SH_COMMON_H__

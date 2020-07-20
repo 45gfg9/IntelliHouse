@@ -1,5 +1,4 @@
-#ifndef __FLAGTICKER_H__
-#define __FLAGTICKER_H__
+#pragma once
 
 #include <Ticker.h>
 
@@ -18,5 +17,3 @@ public:
 
     operator bool();
 };
-
-#endif // __FLAGTICKER_H__

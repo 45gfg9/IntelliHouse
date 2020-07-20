@@ -1,5 +1,4 @@
-#ifndef __SH_REMOTE_H__
-#define __SH_REMOTE_H__
+#pragma once
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
@@ -23,5 +22,3 @@ namespace remote
 
     weather_data getWeatherData();
 } // namespace remote
-
-#endif // __SH_REMOTE_H__
