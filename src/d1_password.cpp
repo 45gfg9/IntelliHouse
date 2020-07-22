@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include <Hash.h>
+#include <WiFiUdp.h>
 #include "remote.hxx"
 #include <Keypad.h>
 
 const byte MAX_PASS_PER_MIN = 8;
+
+WiFiUDP udp;
 
 char keymap[4][4] = {
     {'1', '2', '3', 'A'},
@@ -11,10 +14,8 @@ char keymap[4][4] = {
     {'7', '8', '9', 'C'},
     {'*', '0', '#', 'D'},
 };
-
 byte rowPins[4] = {2, 3, 4, 5};
 byte colPins[4] = {9, 8, 7, 6};
-
 Keypad keypad(makeKeymap(keymap), rowPins, colPins, 4, 4);
 
 String getRandPass(uint32_t seed);
@@ -26,10 +27,14 @@ void handleResult(bool success);
 void setup()
 {
     remote::connect();
+
+    udp.begin(UDP_PORT);
 }
 
 void loop()
 {
+    remote::listenTime(udp);
+
     checkInput();
 }
 
@@ -87,7 +92,7 @@ void checkInput()
             break;
 
     case '*':
-        Serial.println('\\c');
+        Serial.println(F("..Cancel"));
         str.clear();
         break;
 
@@ -102,7 +107,9 @@ bool verifyPass(const String &str)
     if (str.length() != 5)
         return false;
 
-    uint32_t now_min = remote::getTime() / 60;
+    // time(nullptr) returns time_t, eliminating
+    // the need to create a local variable
+    uint32_t now_min = time(nullptr) / 60;
     for (int i = 0; i < 3; i++)
         for (byte j = 0; j < MAX_PASS_PER_MIN; j++)
             if (getRandPass(now_min - i, j).equals(str))
