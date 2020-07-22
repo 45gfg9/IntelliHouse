@@ -3,12 +3,23 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-#include "common.hxx"
 
 #define EX_SSID nullptr
 #define EX_PASS nullptr
 #define AP_SSID "SH_FFF"
 #define AP_PASS "nullptr!"
+
+struct weather_data
+{
+    String location;
+    String weather;
+    int temperature;
+
+    String toString() const
+    {
+        return location + ',' + weather + ',' + temperature;
+    }
+};
 
 // namespace necessity?
 namespace remote
