@@ -12,17 +12,19 @@ enum TaskType
 
 class DateTime
 {
-    time_t t;
+    uint8_t y, m, d, hh, mm, ss;
+    time_t ut() const;
 
 public:
     DateTime(const String &date, const String &time);
     DateTime(const DateTime &copy);
-    String toStr();
 
-    bool operator<(const DateTime &rhs) const { return t < rhs.t; }
-    bool operator>(const DateTime &rhs) const { return t > rhs.t; }
-    bool operator<=(const DateTime &rhs) const { return t <= rhs.t; }
-    bool operator>=(const DateTime &rhs) const { return t >= rhs.t; }
+    String toStr() const;
+
+    bool operator<(const DateTime &rhs) const { return ut() < rhs.ut(); }
+    bool operator>(const DateTime &rhs) const { return ut() > rhs.ut(); }
+    bool operator<=(const DateTime &rhs) const { return ut() <= rhs.ut(); }
+    bool operator>=(const DateTime &rhs) const { return ut() >= rhs.ut(); }
 };
 
 struct Task
@@ -31,6 +33,7 @@ struct Task
     DateTime time;
     String remark;
 
+    bool operator<(const Task &rhs) const { return time < rhs.time; }
     bool operator>(const Task &rhs) const { return time > rhs.time; }
 };
 
@@ -67,52 +70,49 @@ void loop()
     server.handleClient();
 }
 
-// number of days since 2000/01/01, valid for 2001..2099
-static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d)
+time_t DateTime::ut() const
 {
+    // need validation
     static const uint8_t daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (y >= 2000)
-        y -= 2000;
-    uint16_t days = d;
-    for (uint8_t i = 1; i < m; i++)
-        days += daysInMonth[i - 1];
-    if (m > 2 && y % 4 == 0)
-        days++;
-    return days + 365 * y + (y + 3) / 4 - 1;
-}
+    static const time_t SECONDS_FROM_1970_TO_2000 = 946684800L;
 
-static long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s)
-{
-    return ((days * 24L + h) * 60 + m) * 60 + s;
+    uint8_t y = this->y - 2000;
+    uint16_t d = this->d;
+    for (int i = 0; i < m - 1; i++)
+        d += daysInMonth[i];
+    if (m > 2 && y % 4 == 0)
+        d++;
+    d += 365 * y + (y + 3) / 4 - 1;
+
+    return SECONDS_FROM_1970_TO_2000 + ((d * 24L + hh) * 60 + mm) * 60 + ss;
 }
 
 DateTime::DateTime(const String &date, const String &time)
 {
-    // Example: 2020/07/22 16:55:2
-    // TODO change store method
-    const static time_t SECONDS_FROM_1970_TO_2000 = 946684800L;
+    // Example: 2020/07/22 16:55:22
 
-    uint8_t y = date.toInt();
-    uint8_t m = date.substring(5).toInt();
-    uint8_t d = date.substring(8).toInt();
-    uint8_t hh = time.toInt();
-    uint8_t mm = time.substring(3).toInt();
-    uint8_t ss = time.substring(6).toInt();
-
-    t = SECONDS_FROM_1970_TO_2000;
-    t += time2long(date2days(y, m, d), hh, mm, ss);
+    y = date.toInt();
+    m = date.substring(5).toInt();
+    d = date.substring(8).toInt();
+    hh = time.toInt();
+    mm = time.substring(3).toInt();
+    ss = time.substring(6).toInt();
 }
 
 DateTime::DateTime(const DateTime &copy)
 {
-    // TODO change store method
-    t = copy.t;
+    y = copy.y;
+    m = copy.m;
+    d = copy.d;
+    hh = copy.hh;
+    mm = copy.mm;
+    ss = copy.ss;
 }
 
-String DateTime::toStr()
+String DateTime::toStr() const
 {
     static char buf[20];
-    // TODO
-
+    snprintf_P(buf, 20, PSTR("%04d/%02d/%02d %02d:%02d:%02d"),
+               y, m, d, hh, mm, ss);
     return String(buf);
 }
