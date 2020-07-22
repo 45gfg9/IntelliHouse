@@ -16,7 +16,6 @@ public:
              uint8_t hour = 0, uint8_t min = 0, uint8_t sec = 0);
     DateTime(const char *date, const char *time);
     DateTime(const __FlashStringHelper *date, const __FlashStringHelper *time);
-    DateTime(const char *sdate); // Do we really need this?
     DateTime(const DateTime &copy);
     uint16_t year() const { return 2000 + yOff; }
     uint8_t month() const { return m; }
@@ -38,14 +37,10 @@ public:
     // which is beyond most chip's upper bound 2099
     void setunixtime(uint32_t t);
     uint32_t unixtime() const;
-    char *format(char *ret) const;
-    char *tostr(char *charr) const;
     String tostr() const;
 
     bool operator==(const DateTime &date) const;
-    bool operator==(const char *sdate) const;
     bool operator!=(const DateTime &date) const;
-    bool operator!=(const char *sdate) const;
     bool operator<(const DateTime &date) const;
     bool operator>(const DateTime &date) const;
     bool operator<=(const DateTime &date) const;

@@ -9,9 +9,6 @@
 // utility code, some of this could be exposed in the DateTime API if needed
 #define SECONDS_FROM_1970_TO_2000 946684800L
 
-static uint8_t bcd2bin(uint8_t val) { return val - 6 * (val >> 4); }
-static uint8_t bin2bcd(uint8_t val) { return val + 6 * (val / 10); }
-
 const uint8_t daysInMonth[] PROGMEM = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 // number of days since 2000/01/01, valid for 2001..2099
@@ -92,11 +89,6 @@ DateTime::DateTime(const __FlashStringHelper *date, const __FlashStringHelper *t
     DateTime(date, time);
 }
 
-DateTime::DateTime(const char *sdate)
-{
-    DateTime(sdate, sdate + 11);
-}
-
 /*********************************************/
 /*         Comparison & Modification         */
 /*********************************************/
@@ -106,19 +98,9 @@ bool DateTime::operator==(const DateTime &date) const
     return unixtime() == date.unixtime();
 }
 
-bool DateTime::operator==(const char *sdate) const
-{
-    return *this == DateTime(sdate);
-}
-
 bool DateTime::operator!=(const DateTime &date) const
 {
     return unixtime() != date.unixtime();
-}
-
-bool DateTime::operator!=(const char *sdate) const
-{
-    return *this != DateTime(sdate);
 }
 
 bool DateTime::operator<(const DateTime &date) const
@@ -250,87 +232,11 @@ uint32_t DateTime::unixtime() const
     return t;
 }
 
-// TODO follow strftime format, could be difficult
-char *DateTime::format(char *ret) const
-{
-    for (uint8_t i = 0; i < strlen(ret); i++)
-    {
-        if (ret[i] == 'h' && ret[i + 1] == 'h')
-        {
-            ret[i] = '0' + hh / 10;
-            ret[i + 1] = '0' + hh % 10;
-        }
-
-        if (ret[i] == 'm' && ret[i + 1] == 'm')
-        {
-            ret[i] = '0' + mm / 10;
-            ret[i + 1] = '0' + mm % 10;
-        }
-
-        if (ret[i] == 's' && ret[i + 1] == 's')
-        {
-            ret[i] = '0' + ss / 10;
-            ret[i + 1] = '0' + ss % 10;
-        }
-
-        if (ret[i] == 'D' && ret[i + 1] == 'D')
-        {
-            ret[i] = '0' + d / 10;
-            ret[i + 1] = '0' + d % 10;
-        }
-
-        if (ret[i] == 'M' && ret[i + 1] == 'M')
-        {
-            ret[i] = '0' + m / 10;
-            ret[i + 1] = '0' + m % 10;
-        }
-
-        if (ret[i] == 'Y')
-        {
-            if (ret[i + 3] == 'Y')
-            {
-                ret[i] = '2';
-                ret[i + 1] = '0';
-                ret[i + 2] = '0' + (yOff / 10) % 10;
-                ret[i + 3] = '0' + yOff % 10;
-            }
-            else if (ret[i + 1] == 'Y')
-            {
-                ret[i] = '0' + (yOff / 10) % 10;
-                ret[i + 1] = '0' + yOff % 10;
-            }
-        }
-    }
-    return ret;
-}
-
-char *DateTime::tostr(char *charr) const
-{
-    charr[0] = '2';
-    charr[1] = '0';
-    charr[4] = charr[7] = '/';
-    charr[13] = charr[16] = ':';
-    charr[10] = ' ';
-    charr[2] = '0' + yOff / 10;
-    charr[3] = '0' + yOff % 10;
-    charr[5] = '0' + m / 10;
-    charr[6] = '0' + m % 10;
-    charr[8] = '0' + d / 10;
-    charr[9] = '0' + d % 10;
-    charr[11] = '0' + hh / 10;
-    charr[12] = '0' + hh % 10;
-    charr[14] = '0' + mm / 10;
-    charr[15] = '0' + mm % 10;
-    charr[17] = '0' + ss / 10;
-    charr[18] = '0' + ss % 10;
-    charr[19] = '\0';
-
-    return charr;
-}
-
 String DateTime::tostr() const
 {
     static char buf[20];
+    sprintf_P(buf, PSTR("20%02d/%02d/%02d %02d:%02d:%02d"),
+              yOff, m, d, hh, mm, ss);
 
-    return String(tostr(buf));
+    return String(buf);
 }
