@@ -23,7 +23,7 @@ time_t fetchTime();
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(BAUD_RATE);
     Serial.println();
 
     WiFi.softAPConfig(gatewayIP, gatewayIP, subnetMask);

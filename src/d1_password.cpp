@@ -26,6 +26,9 @@ void handleResult(bool success);
 
 void setup()
 {
+    Serial.begin(BAUD_RATE);
+    Serial.println();
+
     remote::connect();
 
     udp.begin(UDP_PORT);

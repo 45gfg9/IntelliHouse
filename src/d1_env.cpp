@@ -17,6 +17,9 @@ off (but manual)
 
 void setup()
 {
+    Serial.begin(BAUD_RATE);
+    Serial.println();
+
     remote::connect();
 }
 

@@ -52,7 +52,7 @@ void updateWeather();
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(BAUD_RATE);
     Serial.println();
 
     pinMode(FAN_PIN, OUTPUT);
