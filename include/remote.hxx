@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
+#include <ESP8266mDNS.h>
+#include <Udp.h>
 
 #define EX_SSID nullptr
 #define EX_PASS nullptr
@@ -26,6 +27,7 @@ namespace remote
 {
     void begin();
     void connect();
+    void mDNSsetup(const String& name, int port = 80);
 
     void listenTime(UDP &udp);
 

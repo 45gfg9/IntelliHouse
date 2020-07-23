@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <queue>
-#include <ESP8266WebServer.h>
 #include <LittleFS.h>
+#include <ESP8266WebServer.h>
+#include <WiFiUdp.h>
 #include "remote.hxx"
 
 enum TaskType
@@ -17,6 +18,7 @@ class DateTime
 
 public:
     DateTime(const String &date, const String &time);
+    DateTime(uint16_t y, uint8_t m, uint8_t d, uint8_t hh, uint8_t mm, uint8_t ss);
     DateTime(const DateTime &copy);
 
     String toStr() const;
@@ -37,11 +39,14 @@ struct Task
     bool operator>(const Task &rhs) const { return time > rhs.time; }
 };
 
+WiFiUDP udp;
 ESP8266WebServer server; // default port 80
 std::priority_queue<Task, std::vector<Task>, std::greater<Task>> pq;
 
 void setup()
 {
+    Serial.begin(BAUD_RATE);
+    Serial.println();
     remote::connect();
 
     Serial.println(LittleFS.begin() ? F("LittleFS Begin") : F("LittleFS Fail"));
@@ -63,6 +68,10 @@ void setup()
 
         server.send(201);
     });
+
+    udp.begin(UDP_PORT);
+
+    server.begin();
 }
 
 void loop()
@@ -72,14 +81,13 @@ void loop()
 
 time_t DateTime::ut() const
 {
-    // need validation
-    static const uint8_t daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    static const uint8_t DAYS_IN_MONTH[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     static const time_t SECONDS_FROM_1970_TO_2000 = 946684800L;
 
-    uint8_t y = this->y - 2000;
+    uint8_t y = this->y;
     uint16_t d = this->d;
     for (int i = 0; i < m - 1; i++)
-        d += daysInMonth[i];
+        d += DAYS_IN_MONTH[i];
     if (m > 2 && y % 4 == 0)
         d++;
     d += 365 * y + (y + 3) / 4 - 1;
@@ -90,7 +98,6 @@ time_t DateTime::ut() const
 DateTime::DateTime(const String &date, const String &time)
 {
     // Example: 2020/07/22 16:55:22
-
     y = date.toInt();
     m = date.substring(5).toInt();
     d = date.substring(8).toInt();
@@ -99,20 +106,17 @@ DateTime::DateTime(const String &date, const String &time)
     ss = time.substring(6).toInt();
 }
 
-DateTime::DateTime(const DateTime &copy)
-{
-    y = copy.y;
-    m = copy.m;
-    d = copy.d;
-    hh = copy.hh;
-    mm = copy.mm;
-    ss = copy.ss;
-}
+DateTime::DateTime(uint16_t y, uint8_t m, uint8_t d,
+                   uint8_t hh, uint8_t mm, uint8_t ss) : y(y < 2000 ? y : y - 2000), m(m), d(d),
+                                                         hh(hh), mm(mm), ss(ss) {}
+
+DateTime::DateTime(const DateTime &copy) : y(copy.y), m(copy.m), d(copy.d),
+                                           hh(copy.hh), mm(copy.mm), ss(copy.ss) {}
 
 String DateTime::toStr() const
 {
     static char buf[20];
-    snprintf_P(buf, 20, PSTR("%04d/%02d/%02d %02d:%02d:%02d"),
+    snprintf_P(buf, 20, PSTR("20%02d/%02d/%02d %02d:%02d:%02d"),
                y, m, d, hh, mm, ss);
     return String(buf);
 }

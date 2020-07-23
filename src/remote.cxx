@@ -76,6 +76,17 @@ void remote::connect()
     Serial.println(WiFi.localIP());
 }
 
+void remote::mDNSsetup(const String& name, int port)
+{
+    if (!MDNS.begin(name)) {
+        Serial.println(F("Error setting up mDNS responder!"));
+        // Fail
+    }
+    Serial.println(F("mDNS responder started"));
+
+    MDNS.addService("http", "tcp", port);
+}
+
 void remote::listenTime(UDP &udp)
 {
     if (udp.parsePacket())
