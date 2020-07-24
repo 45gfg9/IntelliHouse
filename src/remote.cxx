@@ -12,36 +12,31 @@ static void gen(int pin, int delay1, int delay2)
 
 static void connectBlocking(const char *ssid, const char *pass)
 {
-    Serial.printf_P(PSTR("Connecting to %s"), ssid);
-    WiFi.begin(ssid, pass);
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
+    Serial.printf_P(PSTR("Connecting to %s. "), ssid);
+    WiFi.begin(ssid, pass);
 
-    for (;;)
+    // returns -1 on timeout (default 60000)
+    int8_t status = WiFi.waitForConnectResult();
+    if (status == WL_CONNECTED)
     {
-        wl_status_t status = WiFi.status();
-        if (status == WL_CONNECTED)
-        {
-            Serial.println(F(" Connected!"));
-            digitalWrite(LED, HIGH);
-            break;
-        }
-        else if (status == WL_CONNECT_FAILED)
-        {
-            Serial.printf_P(PSTR(" Failed to connect to %s"), ssid);
-            for (int i = 0; i < 10; i++)
-                gen(LED, 100, 100);
-            ESP.restart();
-        }
-        else if (status == WL_NO_SSID_AVAIL)
-        {
-            Serial.printf_P(PSTR(" %s not found"), ssid);
-            for (int i = 500; i > 0; i -= 50)
-                gen(LED, i, i);
-            ESP.restart();
-        }
-        Serial.print('.');
-        delay(200);
+        Serial.println(F("Connected!"));
+        digitalWrite(LED, HIGH);
+    }
+    else if (status == WL_CONNECT_FAILED || status == -1)
+    {
+        Serial.printf_P(PSTR("Failed to connect to %s"), ssid);
+        for (int i = 0; i < 10; i++)
+            gen(LED, 100, 100);
+        ESP.restart();
+    }
+    else if (status == WL_NO_SSID_AVAIL)
+    {
+        Serial.printf_P(PSTR("%s not found"), ssid);
+        for (int i = 500; i > 0; i -= 50)
+            gen(LED, i, i);
+        ESP.restart();
     }
 }
 
