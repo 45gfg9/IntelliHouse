@@ -49,10 +49,11 @@ void loop()
     if (ft_time)
     {
         Serial.println(F("Sending UDP packet"));
-        const size_t size = sizeof(time_t);
+        const size_t size = 4;
         byte buf[size];
 
         time_t t = fetchTime() + 8 * 3600; // UTC+8
+        // Drop milliseconds accuracy
         timeval tv = {t, 0};
         settimeofday(&tv, nullptr);
 
@@ -60,7 +61,7 @@ void loop()
             buf[i] = t >> 8 * i;
 
         udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), subnetMask), UDP_PORT);
-        udp.write(buf, 4);
+        udp.write(buf, size);
         udp.endPacket();
 
         ft_time.done();
@@ -80,7 +81,7 @@ void loop()
         sent += client.write(data.temperature);
 
         delay(500);
-        Serial.printf_P(PSTR("%d bytes sent\r\n"), sent);
+        Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
         client.stop();
     }
 }
