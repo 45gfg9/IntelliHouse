@@ -52,12 +52,12 @@ void setup()
 
     Serial.println(LittleFS.begin() ? F("LittleFS Begin") : F("LittleFS Fail"));
 
-    server.on("/addTask", [&]() {
-        if (server.method() != HTTP_POST)
-        {
-            server.send(405);
-            return;
-        }
+    server.on("/addTask", HTTP_POST, [&]() {
+        // if (server.method() != HTTP_POST)
+        // {
+        //     server.send(405);
+        //     return;
+        // }
 
         String arg_type = server.arg("task");
         String arg_date = server.arg("date");
