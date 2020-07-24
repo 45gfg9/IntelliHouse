@@ -1,5 +1,7 @@
 #include "remote.hxx"
 
+static const int LED = LED_BUILTIN;
+
 static void gen(int pin, int delay1, int delay2)
 {
     digitalWrite(pin, HIGH);
@@ -10,7 +12,6 @@ static void gen(int pin, int delay1, int delay2)
 
 static void connectBlocking(const char *ssid, const char *pass)
 {
-    static const int LED = LED_BUILTIN;
     Serial.printf_P(PSTR("Connecting to %s"), ssid);
     WiFi.begin(ssid, pass);
     pinMode(LED, OUTPUT);
@@ -30,14 +31,14 @@ static void connectBlocking(const char *ssid, const char *pass)
             Serial.printf_P(PSTR(" Failed to connect to %s"), ssid);
             for (int i = 0; i < 10; i++)
                 gen(LED, 100, 100);
-            ESP.reset();
+            ESP.restart();
         }
         else if (status == WL_NO_SSID_AVAIL)
         {
             Serial.printf_P(PSTR(" %s not found"), ssid);
             for (int i = 500; i > 0; i -= 50)
                 gen(LED, i, i);
-            ESP.reset();
+            ESP.restart();
         }
         Serial.print('.');
         delay(200);
@@ -76,11 +77,14 @@ void remote::connect()
     Serial.println(WiFi.localIP());
 }
 
-void remote::mDNSsetup(const String& name, int port)
+void remote::mDNSsetup(const String &name, int port)
 {
-    if (!MDNS.begin(name)) {
+    if (!MDNS.begin(name))
+    {
         Serial.println(F("Error setting up mDNS responder!"));
-        // Fail
+        for (int i = 0; i < 500; i += 50)
+            gen(LED, i, i);
+        ESP.restart();
     }
     Serial.println(F("mDNS responder started"));
 

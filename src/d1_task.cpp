@@ -40,7 +40,7 @@ struct Task
 };
 
 WiFiUDP udp;
-ESP8266WebServer server; // default port 80
+ESP8266WebServer server;
 std::priority_queue<Task, std::vector<Task>, std::greater<Task>> pq;
 
 void setup()
@@ -48,6 +48,7 @@ void setup()
     Serial.begin(BAUD_RATE);
     Serial.println();
     remote::connect();
+    remote::mDNSsetup("d1_task");
 
     Serial.println(LittleFS.begin() ? F("LittleFS Begin") : F("LittleFS Fail"));
 
