@@ -9,9 +9,10 @@
 #include "remote.hxx"
 
 #define TIME_INTERVAL 60
+#define REQ_INTERVAL 3600
 
-const IPAddress gatewayIP(192, 168, 45, 1);
-const IPAddress subnetMask(255, 255, 255, 0);
+const IPAddress GATEWAY_IP(192, 168, 45, 1);
+const IPAddress SUBNET_MASK(255, 255, 255, 0);
 
 ESP8266WebServer server; // default port 80
 WiFiServer tcp(TCP_PORT);
@@ -26,7 +27,7 @@ void setup()
     Serial.begin(BAUD_RATE);
     Serial.println();
 
-    WiFi.softAPConfig(gatewayIP, gatewayIP, subnetMask);
+    WiFi.softAPConfig(GATEWAY_IP, GATEWAY_IP, SUBNET_MASK);
     remote::begin();
 
     tcp.setNoDelay(true);
@@ -46,21 +47,30 @@ void setup()
 
 void loop()
 {
+    static time_t last_udp_req = -1000 * REQ_INTERVAL;
     if (ft_time)
     {
         Serial.println(F("Sending UDP packet"));
-        const size_t size = 4;
+        const size_t size = sizeof(time_t);
         byte buf[size];
+        time_t t;
 
-        time_t t = fetchTime() + 8 * 3600; // UTC+8
-        // Drop milliseconds accuracy
-        timeval tv = {t, 0};
-        settimeofday(&tv, nullptr);
-
+        if (millis() - last_udp_req >= 1000 * REQ_INTERVAL)
+        {
+            t = fetchTime() + 8 * 3600; // UTC+8
+            // Drop milliseconds accuracy
+            timeval tv = {t, 0};
+            settimeofday(&tv, nullptr);
+            last_udp_req = millis();
+        }
+        else
+        {
+            time(&t);
+        }
         for (size_t i = 0; i < size; i++)
             buf[i] = t >> 8 * i;
 
-        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), subnetMask), UDP_PORT);
+        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), SUBNET_MASK), UDP_PORT);
         udp.write(buf, size);
         udp.endPacket();
 
@@ -141,25 +151,25 @@ weather_data fetchWeatherData()
     }
 
     WiFiClient wc;
-    HTTPClient http;
+    HTTPClient hc;
 
-    if (!http.begin(wc, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
+    if (!hc.begin(wc, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
         return {F("Error"), F("Unable to Connect :("), 0};
 
-    int code = http.GET();
+    int code = hc.GET();
     if (code == 0)
     {
-        http.end();
+        hc.end();
         return {F("Error"), F("HTTP GET Failed :("), 0};
     }
     if (code != HTTP_CODE_OK)
     {
-        http.end();
+        hc.end();
         return {F("Error"), String(F("HTTP Code ")) + code, 0};
     }
 
-    String json = http.getString();
-    http.end();
+    String json = hc.getString();
+    hc.end();
 
     DynamicJsonDocument doc(JSON_BUFSIZE);
     deserializeJson(doc, json);
