@@ -5,10 +5,11 @@ static const uint8_t DAYS_IN_MONTH[] PROGMEM = {31, 28, 31, 30, 31, 30, 31, 31, 
 
 time_t DateTime::ut() const
 {
+    // copied from RTCLib
     uint8_t y = this->y;
     uint16_t d = this->d;
-    for (int i = 0; i < m - 1; i++)
-        d += DAYS_IN_MONTH[i];
+    for (int i = 1; i < m; i++)
+        d += pgm_read_byte(DAYS_IN_MONTH + i - 1);
     if (m > 2 && y % 4 == 0)
         d++;
     d += 365 * y + (y + 3) / 4 - 1;
@@ -18,7 +19,7 @@ time_t DateTime::ut() const
 
 DateTime::DateTime(time_t t)
 {
-    // copied from RTCLib; need validation
+    // copied from RTCLib
     t -= SECONDS_FROM_1970_TO_2000; // bring to 2000 timestamp from 1970
 
     ss = t % 60;
@@ -26,14 +27,14 @@ DateTime::DateTime(time_t t)
     mm = t % 60;
     t /= 60;
     hh = t % 24;
-    uint16_t days = t / 24;
-    uint8_t leap;
+    uint16_t d = t / 24;
+    bool leap;
     for (y = 0;; y++)
     {
         leap = y % 4 == 0;
-        if (days < 365 + leap)
+        if (d < 365 + leap)
             break;
-        days -= 365 + leap;
+        d -= 365 + leap;
     }
 
     for (m = 1;; m++)
@@ -41,12 +42,12 @@ DateTime::DateTime(time_t t)
         uint8_t daysPerMonth = pgm_read_byte(DAYS_IN_MONTH + m - 1);
         if (m == 2 && leap)
             daysPerMonth++;
-        if (days < daysPerMonth)
+        if (d < daysPerMonth)
             break;
-        days -= daysPerMonth;
+        d -= daysPerMonth;
     }
 
-    d = days + 1;
+    this->d = d + 1;
 }
 
 DateTime::DateTime(const String &date, const String &time)
