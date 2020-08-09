@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Hash.h>
 #include <WiFiUdp.h>
-#include "remote.hxx"
+#include "remote.h"
 #include <Keypad.h>
 
 const byte MAX_PASS_PER_MIN = 8;

@@ -2,7 +2,7 @@
 #include <SimpleDHT.h>
 #include <LiquidCrystal_I2C.h>
 #include <FlagTicker.h>
-#include "remote.hxx"
+#include "remote.h"
 
 #define DHT_PIN D0
 #define FAN_PIN D6

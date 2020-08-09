@@ -2,7 +2,7 @@
 #include <WiFiUdp.h>
 #include <Adafruit_NeoPixel.h>
 #include <DateTime.h>
-#include "remote.hxx"
+#include "remote.h"
 
 #define LED_COUNT 30
 #define LED_PIN D0

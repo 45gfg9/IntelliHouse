@@ -6,7 +6,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 #include <FlagTicker.h>
-#include "remote.hxx"
+#include "remote.h"
 
 #define TIME_INTERVAL 60
 #define REQ_INTERVAL 3600

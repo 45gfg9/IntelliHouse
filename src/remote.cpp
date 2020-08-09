@@ -1,4 +1,4 @@
-#include "remote.hxx"
+#include "remote.h"
 
 static const int LED = LED_BUILTIN;
 
