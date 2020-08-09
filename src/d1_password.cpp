@@ -14,8 +14,8 @@ char keymap[4][4] = {
     {'7', '8', '9', 'C'},
     {'*', '0', '#', 'D'},
 };
-byte rowPins[4] = {2, 3, 4, 5};
-byte colPins[4] = {9, 8, 7, 6};
+byte rowPins[4] = {D8, D7, D6, D5};
+byte colPins[4] = {D1, D2, D3, D4};
 Keypad keypad(makeKeymap(keymap), rowPins, colPins, 4, 4);
 
 String getRandPass(uint32_t seed);
