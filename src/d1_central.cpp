@@ -4,6 +4,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <FlagTicker.h>
 #include "remote.h"
@@ -36,9 +37,7 @@ void setup()
 
     ft_time.begin(TIME_INTERVAL);
 
-    server.on("/", [&]() {
-        server.send(200, "text/plain", F("TODO"));
-    });
+    server.serveStatic("/", LittleFS, "/index.html");
 
     server.on("/task", [&]() {
         server.send(200, "text/plain", F("TODO"));

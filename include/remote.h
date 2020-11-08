@@ -27,7 +27,7 @@ namespace remote
 {
     void begin();
     void connect();
-    void mDNSsetup(const String& name, int port = 80);
+    void mDNSsetup(const String &name, int port = 80);
 
     void listenTime(UDP &udp);
 
