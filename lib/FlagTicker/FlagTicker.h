@@ -2,18 +2,17 @@
 
 #include <Ticker.h>
 
-class FlagTicker
-{
-    Ticker ticker;
-    bool trigger;
+class FlagTicker {
+  Ticker ticker;
+  bool trigger;
 
 public:
-    FlagTicker();
+  FlagTicker();
 
-    void begin(float s);
-    void begin_ms(uint32_t ms);
-    void stop();
-    void done();
+  void begin(float s);
+  void begin_ms(uint32_t ms);
+  void stop();
+  void done();
 
-    operator bool();
+  operator bool();
 };
