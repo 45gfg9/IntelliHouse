@@ -110,7 +110,7 @@ weather_data remote::getWeatherData() {
   WiFiClient client;
 
   if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
-    return {F("Error"), F("Connection Failed :("), 0};
+    return {SHERR, SHERR_CON, 0};
 
   Serial.print(F("Connecting to Gateway"));
   while (!client.connected()) {

@@ -4,6 +4,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <Udp.h>
+#include "errmsg.h"
 
 #define EX_SSID nullptr
 #define EX_PASS nullptr

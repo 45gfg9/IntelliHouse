@@ -124,7 +124,7 @@ weather_data fetchWeatherData() {
   static char psk[PSK_STRLEN];
 
   if (WiFi.getMode() == WIFI_AP)
-    return {F("Error"), F("Not Connected :("), 0};
+    return {SHERR, SHERR_NC, 0};
 
   if (*psk == 0) {
     EEPROM.begin(PSK_STRLEN);
@@ -140,16 +140,16 @@ weather_data fetchWeatherData() {
                 String(F("http://api.seniverse.com/v3/weather/"
                          "now.json?language=en&location=ip&key="))
                     + psk))
-    return {F("Error"), F("Unable to Connect :("), 0};
+    return {SHERR, SHERR_HTTP_CON, 0};
 
   int code = hc.GET();
   if (code == 0) {
     hc.end();
-    return {F("Error"), F("HTTP GET Failed :("), 0};
+    return {SHERR, SHERR_HTTP_GET, 0};
   }
   if (code != HTTP_CODE_OK) {
     hc.end();
-    return {F("Error"), String(F("HTTP Code ")) + code, 0};
+    return {SHERR, String(F("HTTP Code ")) + code, 0};
   }
 
   String json = hc.getString();
