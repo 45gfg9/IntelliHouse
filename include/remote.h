@@ -20,7 +20,6 @@ struct weather_data {
   }
 };
 
-// namespace necessity?
 namespace remote {
   void begin();
   void connect();
