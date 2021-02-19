@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Hash.h>
 #include <WiFiUdp.h>
-#include "remote.h"
 #include <Keypad.h>
+#include "remote.h"
 
 const byte MAX_PASS_PER_MIN = 8;
 
@@ -59,7 +59,7 @@ String getRandPass(uint32_t seed, byte nth) {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D'};
 
   srand(seed);
-  for (int i = 0; i < nth; i++)
+  for (int i = nth; i; i--)
     rand();
 
   char otp[6];
@@ -102,8 +102,7 @@ bool verifyPass(const String &str) {
   if (str.length() != 5)
     return false;
 
-  // time(nullptr) returns time_t, eliminating
-  // the need to create a local variable
+  // time(nullptr) returns time_t and is null-safe
   uint32_t now_min = time(nullptr) / 60;
   for (int i = 0; i < 3; i++)
     for (byte j = 0; j < MAX_PASS_PER_MIN; j++)

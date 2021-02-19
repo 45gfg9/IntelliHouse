@@ -77,7 +77,7 @@ void setup() {
 void loop() {
   remote::listenTime(udp);
 
-  bool update_lcd = ft_control | ft_time | ft_weather;
+  bool update_lcd = ft_control || ft_time || ft_weather;
   if (ft_control) {
     updateControl();
     ft_control.done();
@@ -161,9 +161,9 @@ void updateControl() {
     Serial.printf_P(PSTR("DHT read error 0x%x\r\n"), err);
 
   // read success is first condition
-  digitalWrite(FAN_PIN, dht_success & (temp > (is_summer ? STH : WTH)));
-  digitalWrite(HEAT_PIN, dht_success & (temp < (is_summer ? STL : WTL)));
-  digitalWrite(HUMID_PIN, dht_success & (humid < (is_summer ? SHL : WHL)));
+  digitalWrite(FAN_PIN, dht_success && (temp > (is_summer ? STH : WTH)));
+  digitalWrite(HEAT_PIN, dht_success && (temp < (is_summer ? STL : WTL)));
+  digitalWrite(HUMID_PIN, dht_success && (humid < (is_summer ? SHL : WHL)));
 }
 
 void updateTime() {
