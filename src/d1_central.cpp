@@ -23,163 +23,148 @@ FlagTicker ft_time;
 weather_data fetchWeatherData();
 time_t fetchTime();
 
-void setup()
-{
-    Serial.begin(BAUD_RATE);
-    Serial.println();
+void setup() {
+  Serial.begin(BAUD_RATE);
+  Serial.println();
 
-    WiFi.softAPConfig(GATEWAY_IP, GATEWAY_IP, SUBNET_MASK);
-    remote::begin();
+  WiFi.softAPConfig(GATEWAY_IP, GATEWAY_IP, SUBNET_MASK);
+  remote::begin();
 
-    tcp.setNoDelay(true);
-    tcp.begin();
-    udp.begin(UDP_PORT);
+  tcp.setNoDelay(true);
+  tcp.begin();
+  udp.begin(UDP_PORT);
 
-    ft_time.begin(TIME_INTERVAL);
+  ft_time.begin(TIME_INTERVAL);
 
-    server.serveStatic("/", LittleFS, "/index.html");
+  server.serveStatic("/", LittleFS, "/index.html");
 
-    server.on("/task", [&]() {
-        server.send(200, "text/plain", F("TODO"));
-    });
+  server.on("/task", [&]() { server.send(200, "text/plain", F("TODO")); });
 }
 
-void loop()
-{
-    static time_t last_udp_req = -1000 * REQ_INTERVAL;
-    if (ft_time)
-    {
-        Serial.println(F("Sending UDP packet"));
-        const size_t size = sizeof(time_t);
-        byte buf[size];
-        time_t t;
+void loop() {
+  static time_t last_udp_req = -1000 * REQ_INTERVAL;
+  if (ft_time) {
+    Serial.println(F("Sending UDP packet"));
+    const size_t size = sizeof(time_t);
+    byte buf[size];
+    time_t t;
 
-        if (millis() - last_udp_req >= 1000 * REQ_INTERVAL)
-        {
-            t = fetchTime() + 8 * 3600; // UTC+8
-            // Drop milliseconds accuracy
-            timeval tv = {t, 0};
-            settimeofday(&tv, nullptr);
-            last_udp_req = millis();
-        }
-        else
-        {
-            time(&t);
-        }
-        for (size_t i = 0; i < size; i++)
-            buf[i] = t >> 8 * i;
-
-        udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), SUBNET_MASK), UDP_PORT);
-        udp.write(buf, size);
-        udp.endPacket();
-
-        ft_time.done();
+    if (millis() - last_udp_req >= 1000 * REQ_INTERVAL) {
+      t = fetchTime() + 8 * 3600; // UTC+8
+      // Drop milliseconds accuracy
+      timeval tv = {t, 0};
+      settimeofday(&tv, nullptr);
+      last_udp_req = millis();
+    } else {
+      time(&t);
     }
+    for (size_t i = 0; i < size; i++)
+      buf[i] = t >> 8 * i;
 
-    if (tcp.hasClient())
-    {
-        Serial.print(F("TCP handling.. "));
-        size_t sent = 0;
-        WiFiClient client = tcp.available();
-        weather_data data = fetchWeatherData();
-
-        sent += client.write(data.location.length());
-        sent += client.print(data.location);
-        sent += client.write(data.weather.length());
-        sent += client.print(data.weather);
-        sent += client.write(data.temperature);
-
-        delay(500);
-        Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
-        client.stop();
-    }
-}
-
-time_t fetchTime()
-{
-    static const size_t NTP_PACKET_SIZE = 48;
-    static const uint32_t SECONDS_FROM_1900_TO_1970 = 2208988800UL;
-    static const uint32_t TIMEOUT = 200;
-
-    IPAddress ntpIP;
-    WiFi.hostByName("ntp.ntsc.ac.cn", ntpIP);
-
-    byte buf[NTP_PACKET_SIZE];
-    memset(buf, 0, NTP_PACKET_SIZE);
-    buf[0] = 0xE3;
-
-    udp.beginPacket(ntpIP, 123);
-    udp.write(buf, NTP_PACKET_SIZE);
+    udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), SUBNET_MASK),
+                    UDP_PORT);
+    udp.write(buf, size);
     udp.endPacket();
 
-    unsigned long start = millis();
-    while (!udp.parsePacket())
-    {
-        if (millis() - start >= TIMEOUT)
-        {
-            Serial.println(F("UDP Timeout"));
-            return 0;
-        }
-    }
-    udp.read(buf, NTP_PACKET_SIZE);
+    ft_time.done();
+  }
 
-    time_t epoch = (buf[40] << 24 |
-                    buf[41] << 16 |
-                    buf[42] << 8 |
-                    buf[43]) -
-                   SECONDS_FROM_1900_TO_1970;
+  if (tcp.hasClient()) {
+    Serial.print(F("TCP handling.. "));
+    size_t sent = 0;
+    WiFiClient client = tcp.available();
+    weather_data data = fetchWeatherData();
 
-    return epoch;
+    sent += client.write(data.location.length());
+    sent += client.print(data.location);
+    sent += client.write(data.weather.length());
+    sent += client.print(data.weather);
+    sent += client.write(data.temperature);
+
+    delay(500);
+    Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
+    client.stop();
+  }
 }
 
-weather_data fetchWeatherData()
-{
-    static const size_t JSON_BUFSIZE = 512;
-    static const size_t PSK_STRLEN = 18;
-    static char psk[PSK_STRLEN];
+time_t fetchTime() {
+  static const size_t NTP_PACKET_SIZE = 48;
+  static const uint32_t SECONDS_FROM_1900_TO_1970 = 2208988800UL;
+  static const uint32_t TIMEOUT = 200;
 
-    if (WiFi.getMode() == WIFI_AP)
-        return {F("Error"), F("Not Connected :("), 0};
+  IPAddress ntpIP;
+  WiFi.hostByName("ntp.ntsc.ac.cn", ntpIP);
 
-    if (*psk == 0)
-    {
-        EEPROM.begin(PSK_STRLEN);
-        for (size_t i = 0; i < PSK_STRLEN; i++)
-            psk[i] = EEPROM[i];
-        EEPROM.end();
+  byte buf[NTP_PACKET_SIZE];
+  memset(buf, 0, NTP_PACKET_SIZE);
+  buf[0] = 0xE3;
+
+  udp.beginPacket(ntpIP, 123);
+  udp.write(buf, NTP_PACKET_SIZE);
+  udp.endPacket();
+
+  unsigned long start = millis();
+  while (!udp.parsePacket()) {
+    if (millis() - start >= TIMEOUT) {
+      Serial.println(F("UDP Timeout"));
+      return 0;
     }
+  }
+  udp.read(buf, NTP_PACKET_SIZE);
 
-    WiFiClient wc;
-    HTTPClient hc;
+  time_t epoch = (buf[40] << 24 | buf[41] << 16 | buf[42] << 8 | buf[43])
+                 - SECONDS_FROM_1900_TO_1970;
 
-    if (!hc.begin(wc, String(F("http://api.seniverse.com/v3/weather/now.json?language=en&location=ip&key=")) + psk))
-        return {F("Error"), F("Unable to Connect :("), 0};
+  return epoch;
+}
 
-    int code = hc.GET();
-    if (code == 0)
-    {
-        hc.end();
-        return {F("Error"), F("HTTP GET Failed :("), 0};
-    }
-    if (code != HTTP_CODE_OK)
-    {
-        hc.end();
-        return {F("Error"), String(F("HTTP Code ")) + code, 0};
-    }
+weather_data fetchWeatherData() {
+  static const size_t JSON_BUFSIZE = 512;
+  static const size_t PSK_STRLEN = 18;
+  static char psk[PSK_STRLEN];
 
-    String json = hc.getString();
+  if (WiFi.getMode() == WIFI_AP)
+    return {F("Error"), F("Not Connected :("), 0};
+
+  if (*psk == 0) {
+    EEPROM.begin(PSK_STRLEN);
+    for (size_t i = 0; i < PSK_STRLEN; i++)
+      psk[i] = EEPROM[i];
+    EEPROM.end();
+  }
+
+  WiFiClient wc;
+  HTTPClient hc;
+
+  if (!hc.begin(wc,
+                String(F("http://api.seniverse.com/v3/weather/"
+                         "now.json?language=en&location=ip&key="))
+                    + psk))
+    return {F("Error"), F("Unable to Connect :("), 0};
+
+  int code = hc.GET();
+  if (code == 0) {
     hc.end();
+    return {F("Error"), F("HTTP GET Failed :("), 0};
+  }
+  if (code != HTTP_CODE_OK) {
+    hc.end();
+    return {F("Error"), String(F("HTTP Code ")) + code, 0};
+  }
 
-    DynamicJsonDocument doc(JSON_BUFSIZE);
-    deserializeJson(doc, json);
+  String json = hc.getString();
+  hc.end();
 
-    JsonObject result = doc["results"][0];
-    const char *location = result["location"]["name"];
+  DynamicJsonDocument doc(JSON_BUFSIZE);
+  deserializeJson(doc, json);
 
-    JsonObject result_now = result["now"];
-    const char *weather = result_now["text"];
+  JsonObject result = doc["results"][0];
+  const char *location = result["location"]["name"];
 
-    byte temp = atoi(result_now["temperature"]);
+  JsonObject result_now = result["now"];
+  const char *weather = result_now["text"];
 
-    return {location, weather, temp};
+  byte temp = atoi(result_now["temperature"]);
+
+  return {location, weather, temp};
 }

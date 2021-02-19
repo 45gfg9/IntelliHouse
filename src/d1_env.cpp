@@ -24,20 +24,18 @@ off (but manual)
 WiFiUDP udp;
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN);
 
-void setup()
-{
-    Serial.begin(BAUD_RATE);
-    Serial.println();
+void setup() {
+  Serial.begin(BAUD_RATE);
+  Serial.println();
 
-    strip.begin();
-    strip.show();
+  strip.begin();
+  strip.show();
 
-    remote::connect();
+  remote::connect();
 
-    udp.begin(UDP_PORT);
+  udp.begin(UDP_PORT);
 }
 
-void loop()
-{
-    remote::listenTime(udp);
+void loop() {
+  remote::listenTime(udp);
 }

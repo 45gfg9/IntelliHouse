@@ -10,28 +10,25 @@
 #define AP_SSID "SH_FFF"
 #define AP_PASS "nullptr!"
 
-struct weather_data
-{
-    String location;
-    String weather;
-    int temperature;
+struct weather_data {
+  String location;
+  String weather;
+  int temperature;
 
-    String toString() const
-    {
-        return location + ',' + weather + ',' + temperature;
-    }
+  String toString() const {
+    return location + ',' + weather + ',' + temperature;
+  }
 };
 
 // namespace necessity?
-namespace remote
-{
-    void begin();
-    void connect();
-    void mDNSsetup(const String &name, int port = 80);
+namespace remote {
+  void begin();
+  void connect();
+  void mDNSsetup(const String &name, int port = 80);
 
-    void listenTime(UDP &udp);
+  void listenTime(UDP &udp);
 
-    IPAddress getBroadcastIP(const IPAddress &ip, const IPAddress &mask);
+  IPAddress getBroadcastIP(const IPAddress &ip, const IPAddress &mask);
 
-    weather_data getWeatherData();
+  weather_data getWeatherData();
 } // namespace remote
