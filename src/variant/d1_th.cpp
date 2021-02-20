@@ -160,7 +160,7 @@ void updateControl() {
   if (!dht_success)
     Serial.printf_P(PSTR("DHT read error 0x%x\r\n"), err);
 
-  // read success is first condition
+  // read success is precondition
   digitalWrite(FAN_PIN, dht_success && (temp > (is_summer ? STH : WTH)));
   digitalWrite(HEAT_PIN, dht_success && (temp < (is_summer ? STL : WTL)));
   digitalWrite(HUMID_PIN, dht_success && (humid < (is_summer ? SHL : WHL)));

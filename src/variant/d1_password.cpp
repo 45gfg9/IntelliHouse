@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Hash.h>
 #include <WiFiUdp.h>
-#include <Keypad.h>
-#include "remote.h"
+#include "remote.h" // Do NOT change order
+#include <Keypad.h> // Macro collision!
 
 const byte MAX_PASS_PER_MIN = 8;
 
