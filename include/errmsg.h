@@ -1,6 +1,6 @@
 #pragma once
 
-#include <avr/pgmspace.h>
+#include <sys/pgmspace.h>
 
 extern const char *SHERR_P PROGMEM;
 extern const char *SHERR_CON_P PROGMEM;

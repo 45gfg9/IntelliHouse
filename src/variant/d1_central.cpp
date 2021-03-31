@@ -44,7 +44,7 @@ void setup() {
 void loop() {
   static time_t last_udp_req = -1000 * REQ_INTERVAL;
   if (ft_time) {
-    Serial.println(F("Sending UDP packet"));
+    Serial.print(F("Updating time.. "));
     const size_t size = sizeof(time_t);
     byte buf[size];
     time_t t;
@@ -61,6 +61,7 @@ void loop() {
     for (size_t i = 0; i < size; i++)
       buf[i] = t >> 8 * i;
 
+    Serial.println(F("Sending UDP packet"));
     udp.beginPacket(remote::getBroadcastIP(WiFi.softAPIP(), SUBNET_MASK),
                     UDP_PORT);
     udp.write(buf, size);
