@@ -1,4 +1,4 @@
-#include "errmsg.h"
+#include "errmsg.hxx"
 
 const char *SHERR_P = "Error";
 const char *SHERR_CON_P = "Connection Failed :(";

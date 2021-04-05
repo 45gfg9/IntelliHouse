@@ -1,5 +1,5 @@
 #include <functional>
-#include "remote.h"
+#include "remote.hxx"
 
 #define LED LED_BUILTIN
 

@@ -7,7 +7,7 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <FlagTicker.h>
-#include "remote.h"
+#include "remote.hxx"
 
 #define TIME_INTERVAL 60
 #define REQ_INTERVAL 3600

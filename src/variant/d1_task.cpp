@@ -4,7 +4,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
 #include <DateTime.h>
-#include "remote.h"
+#include "remote.hxx"
 
 enum TaskType {
   TV,
