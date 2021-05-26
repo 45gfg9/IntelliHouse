@@ -21,6 +21,10 @@ struct weather_data {
   }
 };
 
+struct udp_packet {
+  time_t epoch;
+};
+
 namespace remote {
   void begin();
   void connect();

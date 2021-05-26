@@ -85,9 +85,12 @@ void remote::mDNSsetup(const String &name, int port) {
 void remote::listenTime(UDP &udp) {
   if (udp.parsePacket()) {
     Serial.println(F("Receiving UDP packet"));
-    time_t t = 0;
-    for (size_t i = 0; i < sizeof(time_t); i++)
-      t |= udp.read() << 8 * i;
+
+    udp_packet pkt;
+    udp.read(reinterpret_cast<char *>(&pkt), sizeof(pkt));
+
+    time_t t = pkt.epoch;
+
     if (t == 0) {
       Serial.println(F("Invalid Time 0"));
       return;
