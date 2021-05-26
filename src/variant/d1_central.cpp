@@ -127,8 +127,7 @@ weather_data fetchWeatherData() {
 
   if (*psk == 0) {
     EEPROM.begin(PSK_STRLEN);
-    for (size_t i = 0; i < PSK_STRLEN; i++)
-      psk[i] = EEPROM[i];
+    memcpy(psk, EEPROM.getConstDataPtr(), PSK_STRLEN);
     EEPROM.end();
   }
 
