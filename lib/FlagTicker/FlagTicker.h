@@ -4,15 +4,13 @@
 
 class FlagTicker {
   Ticker ticker;
-  bool trigger;
+  bool trigger = false;
 
 public:
-  FlagTicker();
-
   void begin(float s);
   void begin_ms(uint32_t ms);
   void stop();
-  void done();
 
-  operator bool();
+  operator bool() const;
+  FlagTicker &operator=(bool state);
 };

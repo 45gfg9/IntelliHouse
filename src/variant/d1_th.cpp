@@ -80,15 +80,15 @@ void loop() {
   bool update_lcd = ft_control || ft_time || ft_weather;
   if (ft_control) {
     updateControl();
-    ft_control.done();
+    ft_control = false;
   }
   if (ft_time) {
     updateTime();
-    ft_time.done();
+    ft_time = false;
   }
   if (ft_weather) {
     updateWeather();
-    ft_weather.done();
+    ft_weather = false;
   }
 
   if (!update_lcd)
@@ -167,8 +167,7 @@ void updateControl() {
 }
 
 void updateTime() {
-  time_t t;
-  time(&t);
+  time_t t = time(nullptr);
   // localtime() returns static variable address
   display_data.time = *localtime(&t);
 }

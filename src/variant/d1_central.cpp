@@ -67,7 +67,7 @@ void loop() {
     udp.write(buf, size);
     udp.endPacket();
 
-    ft_time.done();
+    ft_time = false;
   }
 
   if (tcp.hasClient()) {
