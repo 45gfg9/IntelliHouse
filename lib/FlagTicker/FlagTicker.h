@@ -4,7 +4,7 @@
 
 class FlagTicker {
   Ticker ticker;
-  bool trigger = false;
+  volatile bool trigger = false;
 
 public:
   void begin(float s);
