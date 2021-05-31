@@ -1,5 +1,5 @@
-#include <Arduino.h>
 #include <queue>
+#include <Arduino.h>
 #include <LittleFS.h>
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
@@ -28,15 +28,15 @@ void setup() {
   Serial.begin(BAUD_RATE);
   Serial.println();
   remote::connect();
-  remote::mDNSsetup("d1_task");
+  remote::mDNSsetup(F("d1_task"));
 
   Serial.println(LittleFS.begin() ? F("LittleFS Begin") : F("LittleFS Fail"));
 
   server.on("/addTask", HTTP_POST, [&]() {
-    String arg_type = server.arg("task");
-    String arg_date = server.arg("date");
-    String arg_time = server.arg("time");
-    String arg_remark = server.arg("remark");
+    String arg_type = server.arg(F("task"));
+    String arg_date = server.arg(F("date"));
+    String arg_time = server.arg(F("time"));
+    String arg_remark = server.arg(F("remark"));
 
     Task task = {
         (TaskType)arg_type.toInt(), DateTime(arg_date, arg_time), arg_remark};

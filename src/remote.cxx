@@ -79,7 +79,7 @@ void remote::mDNSsetup(const String &name, int port) {
   }
   Serial.println(F("mDNS responder started"));
 
-  MDNS.addService("http", "tcp", port);
+  MDNS.addService(F("http"), F("tcp"), port);
 }
 
 void remote::listenTime(UDP &udp) {
