@@ -9,6 +9,9 @@
 #include <FlagTicker.h>
 #include "remote.hxx"
 
+#define BLINKER_WIFI
+#include <Blinker.h>
+
 #define TIME_INTERVAL 60
 #define REQ_INTERVAL 3600
 
@@ -19,6 +22,10 @@ ESP8266WebServer server; // default port 80
 WiFiServer tcp(TCP_PORT);
 WiFiUDP udp;
 FlagTicker ft_time;
+
+BlinkerNumber bln_temperature("num-tmp");
+BlinkerNumber bln_humidity("num-hum");
+BlinkerNumber bln_dust("num-dst");
 
 weather_data fetchWeatherData();
 time_t fetchTime();
@@ -33,6 +40,7 @@ void setup() {
 
   WiFi.softAPConfig(GATEWAY_IP, GATEWAY_IP, SUBNET_MASK);
   remote::begin();
+  Blinker.begin("ed581893a94c", nullptr, nullptr);
 
   tcp.setNoDelay(true);
   tcp.begin();
@@ -72,24 +80,36 @@ void loop() {
     ft_time = false;
   }
 
-  if (tcp.hasClient()) {
+  while (tcp.hasClient()) {
     Serial.print(F("TCP handling.. "));
     size_t sent = 0;
     WiFiClient client = tcp.available();
-    weather_data data = fetchWeatherData();
 
-    sent += client.write(data.location.length());
-    sent += client.print(data.location);
-    sent += client.write(data.weather.length());
-    sent += client.print(data.weather);
-    sent += client.write(data.temperature);
+    int cmd = client.read();
+    if (cmd == 0x0B) {
+      weather_data data = fetchWeatherData();
 
-    delay(500);
-    Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
+      sent += client.write(data.location.length());
+      sent += client.print(data.location);
+      sent += client.write(data.weather.length());
+      sent += client.print(data.weather);
+      sent += client.write(data.temperature);
+
+      delay(500);
+
+      Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
+    } else if (cmd == 0x0C) {
+      bln_temperature.print(client.read());
+      bln_humidity.print(client.read());
+      bln_dust.print(client.read());
+      Serial.println(F("Env info updated"));
+    }
+
     client.stop();
   }
 
   server.handleClient();
+  Blinker.run();
 }
 
 time_t fetchTime() {
@@ -131,7 +151,7 @@ weather_data fetchWeatherData() {
   if (WiFi.getMode() == WIFI_AP)
     return {SHERR, SHERR_NC, 0};
 
-  if (*psk == 0) {
+  if (!*psk) {
     EEPROM.begin(PSK_STRLEN);
     memcpy(psk, EEPROM.getConstDataPtr(), PSK_STRLEN);
     EEPROM.end();
@@ -140,6 +160,7 @@ weather_data fetchWeatherData() {
   WiFiClient wc;
   HTTPClient hc;
 
+  // TODO hmac req
   if (!hc.begin(wc,
                 String(F("http://api.seniverse.com/v3/weather/"
                          "now.json?language=en&location=ip&key="))
