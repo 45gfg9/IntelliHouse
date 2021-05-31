@@ -27,6 +27,10 @@ void setup() {
   Serial.begin(BAUD_RATE);
   Serial.println();
 
+  if (!LittleFS.begin()) {
+    Serial.println(F("FS fail!"));
+  }
+
   WiFi.softAPConfig(GATEWAY_IP, GATEWAY_IP, SUBNET_MASK);
   remote::begin();
 
@@ -36,9 +40,9 @@ void setup() {
 
   ft_time.begin(TIME_INTERVAL);
 
-  server.serveStatic("/", LittleFS, "/index.html");
+  server.begin(80);
 
-  server.on("/task", [&]() { server.send(200, "text/plain", F("TODO")); });
+  server.serveStatic("/", LittleFS, "/index.html");
 }
 
 void loop() {
@@ -84,6 +88,8 @@ void loop() {
     Serial.printf_P(PSTR("%u bytes sent\r\n"), sent);
     client.stop();
   }
+
+  server.handleClient();
 }
 
 time_t fetchTime() {
