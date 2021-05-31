@@ -9,11 +9,14 @@
 #define HEAT_PIN D7
 #define HUMID_PIN D8
 
+#define PM25_ILED_PIN D2
+#define PM25_READ_PIN A0
+
 #define LCD_ADDR 0x27
 #define LCD_COLS 20
 #define LCD_ROWS 4
 
-#define CONTROL_INTERVAL 5
+#define CONTROL_INTERVAL 10
 #define TIME_INTERVAL 30
 #define WEATHER_INTERVAL 60
 
@@ -49,6 +52,10 @@ void updateControl();
 void updateTime();
 void updateWeather();
 
+void updateLcd();
+
+int samplePM25();
+
 void setup() {
   Serial.begin(BAUD_RATE);
   Serial.println();
@@ -56,6 +63,7 @@ void setup() {
   pinMode(FAN_PIN, OUTPUT);
   pinMode(HEAT_PIN, OUTPUT);
   pinMode(HUMID_PIN, OUTPUT);
+  pinMode(PM25_ILED_PIN, OUTPUT);
 
   lcd.init();
   lcd.backlight();
@@ -90,11 +98,56 @@ void loop() {
     updateWeather();
     ft_weather = false;
   }
+  if (update_lcd)
+    updateLcd();
+}
 
-  if (!update_lcd)
-    // no need to update lcd
-    return;
+void updateControl() {
+  static const int SHL = 30, STL = 18, STH = 23, WHL = 30, WTL = 23, WTH = 28;
 
+  float temp, humid;
+  int err = dht.read2(&temp, &humid, nullptr);
+  display_data.dht_last_err = (byte)err;
+  display_data.in_temp = (int)temp;
+  display_data.in_humid = (int)humid;
+
+  // summer is from May to Oct, other months are winter
+  bool is_summer = ((display_data.time.tm_mon + 1) % 12 / 6);
+
+  if (err != SimpleDHTErrSuccess)
+    Serial.printf_P(PSTR("DHT read error 0x%x\r\n"), err);
+  else {
+    // read success is precondition
+    digitalWrite(FAN_PIN, (temp > (is_summer ? STH : WTH)));
+    digitalWrite(HEAT_PIN, (temp < (is_summer ? STL : WTL)));
+    digitalWrite(HUMID_PIN, (humid < (is_summer ? SHL : WHL)));
+  }
+
+  WiFiClient client;
+  if (remote::configTcpClient(client)) {
+    client.write(0x0C);
+  }
+  client.write(temp);
+  client.write(humid);
+  client.write(samplePM25());
+
+  client.stop(500);
+}
+
+void updateTime() {
+  time_t t = time(nullptr);
+  // localtime() returns static variable address
+  display_data.time = *localtime(&t);
+}
+
+void updateWeather() {
+  weather_data data = remote::getWeatherData();
+  display_data.local_temp = data.temperature;
+  display_data.location = data.location;
+  display_data.weather = data.weather;
+}
+
+void updateLcd() {
   lcd.clear();
 
   // Line 0 (Date & Time)
@@ -140,41 +193,13 @@ void loop() {
 
   lcd.setCursor(8, 3);
   lcd.printf_P(PSTR("(%s)"), display_data.location.c_str());
-
-  update_lcd = false;
 }
 
-void updateControl() {
-  static const int SHL = 30, STL = 18, STH = 23, WHL = 30, WTL = 23, WTH = 28;
+int samplePM25() {
+  digitalWrite(PM25_ILED_PIN, HIGH);
+  delayMicroseconds(280);
+  int adc = analogRead(PM25_READ_PIN);
+  digitalWrite(PM25_ILED_PIN, LOW);
 
-  float temp, humid;
-  int err = dht.read2(&temp, &humid, nullptr);
-  display_data.dht_last_err = (byte)err;
-  display_data.in_temp = (int)temp;
-  display_data.in_humid = (int)humid;
-
-  // summer is from May to Oct, other months are winter
-  bool is_summer = ((display_data.time.tm_mon + 1) % 12 / 6);
-
-  bool dht_success = (err == SimpleDHTErrSuccess);
-  if (!dht_success)
-    Serial.printf_P(PSTR("DHT read error 0x%x\r\n"), err);
-
-  // read success is precondition
-  digitalWrite(FAN_PIN, dht_success && (temp > (is_summer ? STH : WTH)));
-  digitalWrite(HEAT_PIN, dht_success && (temp < (is_summer ? STL : WTL)));
-  digitalWrite(HUMID_PIN, dht_success && (humid < (is_summer ? SHL : WHL)));
-}
-
-void updateTime() {
-  time_t t = time(nullptr);
-  // localtime() returns static variable address
-  display_data.time = *localtime(&t);
-}
-
-void updateWeather() {
-  weather_data data = remote::getWeatherData();
-  display_data.local_temp = data.temperature;
-  display_data.location = data.location;
-  display_data.weather = data.weather;
+  return adc;
 }
