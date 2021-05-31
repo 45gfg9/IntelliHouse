@@ -6,8 +6,8 @@
 #include <Udp.h>
 #include "errmsg.hxx"
 
-#define EX_SSID nullptr
-#define EX_PASS nullptr
+#define EX_SSID "CMCC-CUud"
+#define EX_PASS "592492h2"
 #define AP_SSID "SH_FFF"
 #define AP_PASS "nullptr!"
 
@@ -30,9 +30,12 @@ namespace remote {
   void connect();
   void mDNSsetup(const String &name, int port = 80);
 
-  void listenTime(UDP &udp);
+  void listenTime(UDP &);
 
   IPAddress getBroadcastIP(const IPAddress &ip, const IPAddress &mask);
 
+  bool configTcpClient(WiFiClient &);
+
   weather_data getWeatherData();
+  void postEnvInfo(uint8_t temp, uint8_t humidity, uint8_t dust);
 } // namespace remote

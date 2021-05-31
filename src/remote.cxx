@@ -109,18 +109,23 @@ IPAddress remote::getBroadcastIP(const IPAddress &ip, const IPAddress &mask) {
   return ret;
 }
 
+bool remote::configTcpClient(WiFiClient &client) {
+  if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
+    return false;
+
+  while (!client.connected())
+    delay(200);
+
+  return true;
+}
+
 weather_data remote::getWeatherData() {
   WiFiClient client;
 
-  if (!client.connect(WiFi.gatewayIP(), TCP_PORT))
+  if (!configTcpClient(client))
     return {SHERR, SHERR_CON, 0};
 
-  Serial.print(F("Connecting to Gateway"));
-  while (!client.connected()) {
-    Serial.print('.');
-    delay(200);
-  }
-  Serial.println();
+  client.write(0x0B);
   delay(500);
 
   Serial.println(client.available());
@@ -138,4 +143,19 @@ weather_data remote::getWeatherData() {
   client.stop();
 
   return {(char *)loc, (char *)wth, tmp};
+}
+
+void remote::postEnvInfo(uint8_t temp, uint8_t humidity, uint8_t dust) {
+  WiFiClient client;
+
+  if (!configTcpClient(client))
+    return;
+
+  client.write(0x0C);
+  client.write(temp);
+  client.write(humidity);
+  client.write(dust);
+
+  delay(500);
+  client.stop();
 }
